@@ -971,6 +971,27 @@
                         <button class="cart-checkout-phone__tools-btn e-btn" type="button" data-action="change">изменить номер телефона</button>
                       </div>
                     </cart-phone>
+
+                    <div class="cart-checkout__box-title">Получатель:</div>
+                    <div class="b-form_box placeholder">
+                      <label class="b-form_box_title required" for="cart-personal-recipient">ФИО получателя</label>
+                      <div class="b-form_box_field">
+                        <input type="text" name="recipient" id="cart-personal-recipient" data-required="true" value="1112">
+                      </div>
+                    </div>
+                    <cart-phone class="cart-checkout-phone" data-id="cart-phone-recipient" data-send-phone="/udata/emarket/send_recipient_phone_code/.json" data-check-phone="/udata/emarket/check_recipient_phone_code/.json" data-timer="60">
+                          <div class="cart-checkout-phone__num b-form_box placeholder">
+                            <label class="b-form_box_title required" for="cart-personal-phone-recipient">Номер телефона получателя</label>
+                            <div class="b-form_box_field">
+                              <input class="js-cart-personal-phone" type="text" name="phone" id="cart-personal-phone-recipient" data-required="true" data-masking="+7 (999) 999-99-99" data-pattern-type="phone" maxlength="18" data-pattern="^(\+7)\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$" value="79111234567" data-step="4">
+                            </div>
+                          </div>
+                    </cart-phone>
+
+
+
+
+
                     <label class="cart-checkout-personal__phone-confirm cart-control cart-control_right-pos cart-control_sm-mob">
                       <input class="js-pure js-confirm-by-phone" type="checkbox" name="confirm-by-phone" value="on" data-ver="21"><span>Подтвердить заказ по телефону</span></label>
                   </div>
