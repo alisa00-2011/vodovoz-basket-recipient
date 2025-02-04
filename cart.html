@@ -927,32 +927,32 @@
                 <div class="cart-checkout">
                   <div class="cart-checkout-personal cart-checkout__box">
                     <div class="cart-checkout__box-title hidden-xs hidden-sm">Покупатель:</div>
-                    <div class="b-form_box placeholder">
-                      <label class="b-form_box_title required" for="cart-personal-customer">ФИО</label>
-                      <div class="b-form_box_field">
+                    <div class="b-form_box b-form_box-personal placeholder">
+                      <label class="b-form_box_title b-form_box_title-personal required" for="cart-personal-customer">ФИО</label>
+                      <div class="b-form_box_field b-form_box_field-personal">
                         <input type="text" name="customer" id="cart-personal-customer" data-required="true" value="1112">
                       </div>
                     </div>
-                    <div class="b-form_box placeholder">
-                      <label class="b-form_box_title required" for="cart-personal-email">E-mail</label>
-                      <div class="b-form_box_field">
+                    <div class="b-form_box b-form_box-personal placeholder">
+                      <label class="b-form_box_title b-form_box_title-personal required" for="cart-personal-email">E-mail</label>
+                      <div class="b-form_box_field b-form_box_field-personal">
                         <input class="js-cart-email" type="text" name="email" id="cart-personal-email" data-required="true" data-pattern-type="email" data-pattern="[0-9a-z_.-]+@[0-9a-z_]+\.[a-z]{2,5}" value="test@gmail.com">
                       </div>
                     </div>
                     <cart-phone class="cart-checkout-phone" data-id="cart-phone" data-send-phone="/udata/emarket/send_customer_phone_code/.json" data-check-phone="/udata/emarket/check_customer_phone_code/.json" data-timer="60">
                       <div class="flex">
                         <div class="col-xs-12">
-                          <div class="cart-checkout-phone__num b-form_box placeholder">
-                            <label class="b-form_box_title required" for="cart-personal-phone">Телефон</label>
-                            <div class="b-form_box_field">
+                          <div class="cart-checkout-phone__num b-form_box b-form_box-personal placeholder">
+                            <label class="b-form_box_title b-form_box_title-personal required" for="cart-personal-phone">Телефон</label>
+                            <div class="b-form_box_field b-form_box_field-personal">
                               <input class="js-cart-personal-phone" type="text" name="phone" id="cart-personal-phone" data-required="true" data-masking="+7 (999) 999-99-99" data-pattern-type="phone" maxlength="18" data-pattern="^(\+7)\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$" value="79111234567" data-step="4">
                             </div>
                           </div>
                         </div>
                         <div class="col-xs-10">
-                          <div class="cart-checkout-phone__sms b-form_box placeholder hidden">
-                            <label class="b-form_box_title required" for="cart-personal-phone-sms">СМС-код</label>
-                            <div class="b-form_box_field">
+                          <div class="cart-checkout-phone__sms b-form_box b-form_box-personal placeholder hidden">
+                            <label class="b-form_box_title b-form_box_title-personal required" for="cart-personal-phone-sms">СМС-код</label>
+                            <div class="b-form_box_field b-form_box_field-personal">
                               <input type="text" name="sms" id="cart-personal-phone-sms" data-required="true" data-masking="0000" maxlength="4" data-smscodevalid="true" value="0000">
                             </div>
                           </div>
@@ -973,25 +973,20 @@
                     </cart-phone>
 
                     <div class="cart-checkout__box-title">Получатель:</div>
-                    <div class="b-form_box placeholder">
-                      <label class="b-form_box_title required" for="cart-personal-recipient">ФИО получателя</label>
-                      <div class="b-form_box_field">
+                    <div class="b-form_box b-form_box-personal placeholder">
+                      <label class="b-form_box_title b-form_box_title-personal required" for="cart-personal-recipient">ФИО получателя</label>
+                      <div class="b-form_box_field b-form_box_field-personal">
                         <input type="text" name="recipient" id="cart-personal-recipient" data-required="true" value="1112">
                       </div>
                     </div>
                     <cart-phone class="cart-checkout-phone" data-id="cart-phone-recipient" data-send-phone="/udata/emarket/send_recipient_phone_code/.json" data-check-phone="/udata/emarket/check_recipient_phone_code/.json" data-timer="60">
-                          <div class="cart-checkout-phone__num b-form_box placeholder">
-                            <label class="b-form_box_title required" for="cart-personal-phone-recipient">Номер телефона получателя</label>
-                            <div class="b-form_box_field">
+                          <div class="cart-checkout-phone__num b-form_box b-form_box-personal placeholder">
+                            <label class="b-form_box_title b-form_box_title-personal required" for="cart-personal-phone-recipient">Номер телефона получателя</label>
+                            <div class="b-form_box_field b-form_box_field-personal">
                               <input class="js-cart-personal-phone" type="text" name="phone" id="cart-personal-phone-recipient" data-required="true" data-masking="+7 (999) 999-99-99" data-pattern-type="phone" maxlength="18" data-pattern="^(\+7)\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$" value="79111234567" data-step="4">
                             </div>
                           </div>
                     </cart-phone>
-
-
-
-
-
                     <label class="cart-checkout-personal__phone-confirm cart-control cart-control_right-pos cart-control_sm-mob">
                       <input class="js-pure js-confirm-by-phone" type="checkbox" name="confirm-by-phone" value="on" data-ver="21"><span>Подтвердить заказ по телефону</span></label>
                   </div>

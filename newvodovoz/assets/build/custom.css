@@ -4499,3 +4499,50 @@ numpages white bg
   color: green;
 }
 
+/** -- cart-checkout-- **/
+.cart-checkout__box-title{
+  display: block;
+    margin-bottom: 6px;
+    font: 700 24px/1.15 'Cuprum', sans-serif;
+    color: #072d76
+}
+.cart-checkout-phone{
+  display: block;
+  margin-bottom: 6px;
+  min-height: auto;
+  font: 700 14px 'Cuprum', sans-serif
+
+}
+
+
+.cart-checkout-personal .b-form_box-personal {
+  margin-bottom: 5px!important;
+}
+
+.cart .b-form_box_title-personal{
+  font: 400 18px 'Cuprum', sans-serif!important;
+}
+
+.cart .b-form_box.placeholder .b-form_box_title-personal {
+  height: 33px!important;
+  line-height: 33px!important;
+}
+
+.cart .b-form_box.placeholder.active .b-form_box_title-personal {
+  left: 8px!important;
+}
+
+
+.cart .b-form_box_field-personal input{
+  padding: 7px 5px 0!important;
+  height: 33px!important;
+  font: 400 18px 'Cuprum', sans-serif!important;
+}
+
+.cart-checkout-personal .flex > [class*=col-] {
+   margin: 0; 
+}
+
+label.cart-checkout-personal__phone-confirm.cart-control{
+  margin-bottom: 0;
+}
