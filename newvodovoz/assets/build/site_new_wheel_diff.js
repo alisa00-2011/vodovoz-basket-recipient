@@ -1,3 +1,367 @@
+!function(P,H,k){"use strict";if(1==P.importNode.length&&!H.get("ungap-li")){var D="extends";try{var e={extends:"li"},t=HTMLLIElement,n=function(){return Reflect.construct(t,[],n)};if(n.prototype=k.create(t.prototype),H.define("ungap-li",n,e),!/is="ungap-li"/.test((new n).outerHTML))throw e}catch(e){!function(){var l="attributeChangedCallback",n="connectedCallback",r="disconnectedCallback",e=Element.prototype,i=k.assign,t=k.create,o=k.defineProperties,a=k.getOwnPropertyDescriptor,s=k.setPrototypeOf,u=H.define,c=H.get,f=H.upgrade,p=H.whenDefined,v=t(null),d=new WeakMap,g={childList:!0,subtree:!0};Reflect.ownKeys(self).filter(function(e){return"string"==typeof e&&/^HTML(?!Element)/.test(e)}).forEach(function(e){function t(){}var n=self[e];s(t,n),(t.prototype=n.prototype).constructor=t,(n={})[e]={value:t},o(self,n)}),new MutationObserver(m).observe(P,g),O(Document.prototype,"importNode"),O(Node.prototype,"cloneNode"),o(H,{define:{value:function(e,t,n){if(e=e.toLowerCase(),n&&D in n){v[e]=i({},n,{Class:t});for(var e=n[D]+'[is="'+e+'"]',r=P.querySelectorAll(e),o=0,a=r.length;o<a;o++)A(r[o])}else u.apply(H,arguments)}},get:{value:function(e){return e in v?v[e].Class:c.call(H,e)}},upgrade:{value:function(e){var t=L(e);!t||e instanceof t.Class?f.call(H,e):N(e,t)}},whenDefined:{value:function(e){return e in v?Promise.resolve():p.call(H,e)}}});var h=P.createElement;o(P,{createElement:{value:function(e,t){e=h.call(P,e);return t&&"is"in t&&(e.setAttribute("is",t.is),H.upgrade(e)),e}}});var b=a(e,"attachShadow").value,y=a(e,"innerHTML");function m(e){for(var t=0,n=e.length;t<n;t++){for(var r=e[t],o=r.addedNodes,a=r.removedNodes,i=0,l=o.length;i<l;i++)A(o[i]);for(i=0,l=a.length;i<l;i++)C(a[i])}}function w(e){for(var t=0,n=e.length;t<n;t++){var r=e[t],o=r.attributeName,a=r.oldValue,i=r.target,r=i.getAttribute(o);l in i&&(a!=r||null!=r)&&i[l](o,a,i.getAttribute(o),null)}}function C(e){var t;1===e.nodeType&&((t=L(e))&&e instanceof t.Class&&r in e&&d.get(e)!==r&&(d.set(e,r),Promise.resolve(e).then(T)),E(e,C))}function L(e){e=e.getAttribute("is");return e&&(e=e.toLowerCase())in v?v[e]:null}function M(e){e[n]()}function T(e){e[r]()}function N(e,t){var t=t.Class,n=t.observedAttributes||[];if(s(e,t.prototype),n.length){new MutationObserver(w).observe(e,{attributes:!0,attributeFilter:n,attributeOldValue:!0});for(var r=[],o=0,a=n.length;o<a;o++)r.push({attributeName:n[o],oldValue:null,target:e});w(r)}}function A(e){var t;1===e.nodeType&&((t=L(e))&&(e instanceof t.Class||N(e,t),n in e&&e.isConnected&&d.get(e)!==n&&(d.set(e,n),Promise.resolve(e).then(M))),E(e,A))}function E(e,t){for(var n=e.content,r=(n&&11==n.nodeType?n:e).querySelectorAll("[is]"),o=0,a=r.length;o<a;o++)t(r[o])}function O(e,t){var n=e[t],r={};r[t]={value:function(){var e=n.apply(this,arguments);switch(e.nodeType){case 1:case 11:E(e,A)}return e}},o(e,r)}o(e,{attachShadow:{value:function(){var e=b.apply(this,arguments);return new MutationObserver(m).observe(e,g),e}},innerHTML:{get:y.get,set:function(e){y.set.call(this,e),/\bis=("|')?[a-z0-9_-]+\1/i.test(e)&&E(this,A)}}})}()}}}(document,customElements,Object);
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(factory());
+}(this, (function () { 'use strict';
+
+/**
+ * @this {Promise}
+ */
+function finallyConstructor(callback) {
+  var constructor = this.constructor;
+  return this.then(
+    function(value) {
+      // @ts-ignore
+      return constructor.resolve(callback()).then(function() {
+        return value;
+      });
+    },
+    function(reason) {
+      // @ts-ignore
+      return constructor.resolve(callback()).then(function() {
+        // @ts-ignore
+        return constructor.reject(reason);
+      });
+    }
+  );
+}
+
+function allSettled(arr) {
+  var P = this;
+  return new P(function(resolve, reject) {
+    if (!(arr && typeof arr.length !== 'undefined')) {
+      return reject(
+        new TypeError(
+          typeof arr +
+            ' ' +
+            arr +
+            ' is not iterable(cannot read property Symbol(Symbol.iterator))'
+        )
+      );
+    }
+    var args = Array.prototype.slice.call(arr);
+    if (args.length === 0) return resolve([]);
+    var remaining = args.length;
+
+    function res(i, val) {
+      if (val && (typeof val === 'object' || typeof val === 'function')) {
+        var then = val.then;
+        if (typeof then === 'function') {
+          then.call(
+            val,
+            function(val) {
+              res(i, val);
+            },
+            function(e) {
+              args[i] = { status: 'rejected', reason: e };
+              if (--remaining === 0) {
+                resolve(args);
+              }
+            }
+          );
+          return;
+        }
+      }
+      args[i] = { status: 'fulfilled', value: val };
+      if (--remaining === 0) {
+        resolve(args);
+      }
+    }
+
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i]);
+    }
+  });
+}
+
+// Store setTimeout reference so promise-polyfill will be unaffected by
+// other code modifying setTimeout (like sinon.useFakeTimers())
+var setTimeoutFunc = setTimeout;
+// @ts-ignore
+var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null;
+
+function isArray(x) {
+  return Boolean(x && typeof x.length !== 'undefined');
+}
+
+function noop() {}
+
+// Polyfill for Function.prototype.bind
+function bind(fn, thisArg) {
+  return function() {
+    fn.apply(thisArg, arguments);
+  };
+}
+
+/**
+ * @constructor
+ * @param {Function} fn
+ */
+function Promise(fn) {
+  if (!(this instanceof Promise))
+    throw new TypeError('Promises must be constructed via new');
+  if (typeof fn !== 'function') throw new TypeError('not a function');
+  /** @type {!number} */
+  this._state = 0;
+  /** @type {!boolean} */
+  this._handled = false;
+  /** @type {Promise|undefined} */
+  this._value = undefined;
+  /** @type {!Array<!Function>} */
+  this._deferreds = [];
+
+  doResolve(fn, this);
+}
+
+function handle(self, deferred) {
+  while (self._state === 3) {
+    self = self._value;
+  }
+  if (self._state === 0) {
+    self._deferreds.push(deferred);
+    return;
+  }
+  self._handled = true;
+  Promise._immediateFn(function() {
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+    if (cb === null) {
+      (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
+      return;
+    }
+    var ret;
+    try {
+      ret = cb(self._value);
+    } catch (e) {
+      reject(deferred.promise, e);
+      return;
+    }
+    resolve(deferred.promise, ret);
+  });
+}
+
+function resolve(self, newValue) {
+  try {
+    // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+    if (newValue === self)
+      throw new TypeError('A promise cannot be resolved with itself.');
+    if (
+      newValue &&
+      (typeof newValue === 'object' || typeof newValue === 'function')
+    ) {
+      var then = newValue.then;
+      if (newValue instanceof Promise) {
+        self._state = 3;
+        self._value = newValue;
+        finale(self);
+        return;
+      } else if (typeof then === 'function') {
+        doResolve(bind(then, newValue), self);
+        return;
+      }
+    }
+    self._state = 1;
+    self._value = newValue;
+    finale(self);
+  } catch (e) {
+    reject(self, e);
+  }
+}
+
+function reject(self, newValue) {
+  self._state = 2;
+  self._value = newValue;
+  finale(self);
+}
+
+function finale(self) {
+  if (self._state === 2 && self._deferreds.length === 0) {
+    Promise._immediateFn(function() {
+      if (!self._handled) {
+        Promise._unhandledRejectionFn(self._value);
+      }
+    });
+  }
+
+  for (var i = 0, len = self._deferreds.length; i < len; i++) {
+    handle(self, self._deferreds[i]);
+  }
+  self._deferreds = null;
+}
+
+/**
+ * @constructor
+ */
+function Handler(onFulfilled, onRejected, promise) {
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+  this.promise = promise;
+}
+
+/**
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, self) {
+  var done = false;
+  try {
+    fn(
+      function(value) {
+        if (done) return;
+        done = true;
+        resolve(self, value);
+      },
+      function(reason) {
+        if (done) return;
+        done = true;
+        reject(self, reason);
+      }
+    );
+  } catch (ex) {
+    if (done) return;
+    done = true;
+    reject(self, ex);
+  }
+}
+
+Promise.prototype['catch'] = function(onRejected) {
+  return this.then(null, onRejected);
+};
+
+Promise.prototype.then = function(onFulfilled, onRejected) {
+  // @ts-ignore
+  var prom = new this.constructor(noop);
+
+  handle(this, new Handler(onFulfilled, onRejected, prom));
+  return prom;
+};
+
+Promise.prototype['finally'] = finallyConstructor;
+
+Promise.all = function(arr) {
+  return new Promise(function(resolve, reject) {
+    if (!isArray(arr)) {
+      return reject(new TypeError('Promise.all accepts an array'));
+    }
+
+    var args = Array.prototype.slice.call(arr);
+    if (args.length === 0) return resolve([]);
+    var remaining = args.length;
+
+    function res(i, val) {
+      try {
+        if (val && (typeof val === 'object' || typeof val === 'function')) {
+          var then = val.then;
+          if (typeof then === 'function') {
+            then.call(
+              val,
+              function(val) {
+                res(i, val);
+              },
+              reject
+            );
+            return;
+          }
+        }
+        args[i] = val;
+        if (--remaining === 0) {
+          resolve(args);
+        }
+      } catch (ex) {
+        reject(ex);
+      }
+    }
+
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i]);
+    }
+  });
+};
+
+Promise.allSettled = allSettled;
+
+Promise.resolve = function(value) {
+  if (value && typeof value === 'object' && value.constructor === Promise) {
+    return value;
+  }
+
+  return new Promise(function(resolve) {
+    resolve(value);
+  });
+};
+
+Promise.reject = function(value) {
+  return new Promise(function(resolve, reject) {
+    reject(value);
+  });
+};
+
+Promise.race = function(arr) {
+  return new Promise(function(resolve, reject) {
+    if (!isArray(arr)) {
+      return reject(new TypeError('Promise.race accepts an array'));
+    }
+
+    for (var i = 0, len = arr.length; i < len; i++) {
+      Promise.resolve(arr[i]).then(resolve, reject);
+    }
+  });
+};
+
+// Use polyfill for setImmediate for performance gains
+Promise._immediateFn =
+  // @ts-ignore
+  (typeof setImmediateFunc === 'function' &&
+    function(fn) {
+      // @ts-ignore
+      setImmediateFunc(fn);
+    }) ||
+  function(fn) {
+    setTimeoutFunc(fn, 0);
+  };
+
+Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+  if (typeof console !== 'undefined' && console) {
+    console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
+  }
+};
+
+/** @suppress {undefinedVars} */
+var globalNS = (function() {
+  // the only reliable means to get the global object is
+  // `Function('return this')()`
+  // However, this causes CSP violations in Chrome apps.
+  if (typeof self !== 'undefined') {
+    return self;
+  }
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+  if (typeof global !== 'undefined') {
+    return global;
+  }
+  throw new Error('unable to locate global object');
+})();
+
+// Expose the polyfill if Promise is undefined or set to a
+// non-function value. The latter can be due to a named HTMLElement
+// being exposed by browsers for legacy reasons.
+// https://github.com/taylorhakes/promise-polyfill/issues/114
+if (typeof globalNS['Promise'] !== 'function') {
+  globalNS['Promise'] = Promise;
+} else {
+  if (!globalNS.Promise.prototype['finally']) {
+    globalNS.Promise.prototype['finally'] = finallyConstructor;
+  }
+  if (!globalNS.Promise.allSettled) {
+    globalNS.Promise.allSettled = allSettled;
+  }
+}
+
+})));
+
 /*!
  * jQuery JavaScript Library v3.2.1
  * https://jquery.com/
@@ -13082,7 +13446,7 @@ return jQuery;
         _onChangeRange: function (e) {
             var $target = $(e.target),
                 name = $target.attr('name');
-            
+
             this.d.timepickerIsActive = true;
 
             this[name] = $target.val();
@@ -23592,24 +23956,24 @@ return jQuery;
 
     var touch = event.originalEvent.changedTouches[0],
         simulatedEvent = document.createEvent('MouseEvents');
-    
+
     // Initialize the simulated mouse event using the touch event's coordinates
     simulatedEvent.initMouseEvent(
       simulatedType,    // type
-      true,             // bubbles                    
-      true,             // cancelable                 
-      window,           // view                       
-      1,                // detail                     
-      touch.screenX,    // screenX                    
-      touch.screenY,    // screenY                    
-      touch.clientX,    // clientX                    
-      touch.clientY,    // clientY                    
-      false,            // ctrlKey                    
-      false,            // altKey                     
-      false,            // shiftKey                   
-      false,            // metaKey                    
-      0,                // button                     
-      null              // relatedTarget              
+      true,             // bubbles
+      true,             // cancelable
+      window,           // view
+      1,                // detail
+      touch.screenX,    // screenX
+      touch.screenY,    // screenY
+      touch.clientX,    // clientX
+      touch.clientY,    // clientY
+      false,            // ctrlKey
+      false,            // altKey
+      false,            // shiftKey
+      false,            // metaKey
+      0,                // button
+      null              // relatedTarget
     );
 
     // Dispatch the simulated event to the target element
@@ -23698,7 +24062,7 @@ return jQuery;
    * original mouse event handling methods.
    */
   mouseProto._mouseInit = function () {
-    
+
     var self = this;
 
     // Delegate the touch handlers to the widget's element
@@ -23716,7 +24080,7 @@ return jQuery;
    * Remove the touch event handlers
    */
   mouseProto._mouseDestroy = function () {
-    
+
     var self = this;
 
     // Delegate the touch handlers to the widget's element
@@ -25049,9 +25413,9 @@ Enjoy!
 
             // Call the eachField callback
             options.eachField.call(field, event, status, options);
-            
+
             //custom add
-            
+
             if(field.hasClass('js-phone-sms')){
             	if (!!field.data('smscodevalid') && field.data('smscodevalid')===true){
             		console.log('js-phone-sms  -  valid');
@@ -25098,7 +25462,7 @@ Enjoy!
             // Returns the field status
             return status;
         };
-        
+
     $.verifyForm = function(form, event) {
         var formValid = true,
             def = {
@@ -25480,6 +25844,9 @@ $(document).ready(function() {
     // Shop modules
     shopModules.init();
 
+    // Cart functions
+    cartFunctions.init();
+
 });
 
 // UI
@@ -25662,7 +26029,7 @@ var forms = (function(window, undefined) {
     'use strict';
 
     var $body = $('body');
-    
+
     //custom add
     function stringToBoolean(param_value){
         switch(param_value){
@@ -25691,7 +26058,8 @@ var forms = (function(window, undefined) {
             }
         });
 
-        forms.placeholders(namespace + ' .b-form_box.placeholder input, ' + namespace + ' .b-form_box.placeholder select');
+        //forms.placeholders(namespace + ' .b-form_box.placeholder input, ' + namespace + ' .b-form_box.placeholder select');
+        forms.placeholders(namespace + ' .b-form_box.placeholder input, ' + namespace + ' .b-form_box.placeholder textarea, ' + namespace + ' .b-form_box.placeholder select');
 
         forms.styleControls(namespace + ' input[type="checkbox"], ' + namespace + ' input[type="radio"]', namespace + ' select:not([multiple]):not(.js-selectric)', namespace + ' input[type="file"]:not(.js-uploader)');
         forms.styleSelects(namespace + ' select.js-selectric');
@@ -25749,7 +26117,7 @@ var forms = (function(window, undefined) {
                                 notification = (options.required) ? ((!options.conditional) ? conditional : (!options.pattern) ? pattern : '') : required;
 
                             formNotifications.showErrorLabel.call($(this), notification, 0);
-                            
+
                             //custom add
                             console.log($(this));
                             if($(this).attr('name') == 'sms'){
@@ -25800,6 +26168,123 @@ var forms = (function(window, undefined) {
                                 }
                             }
 
+														console.log('test_cart');
+														console.log(xhrSubmit)
+
+														//custom add
+                            if($form.attr('id') == 'eone_form' && $form.data('period_still_avaliable') != 1){
+                            	e.preventDefault();
+
+                            	$form.data('cart_ordering',0);
+                            	var $preloader = $('.cart-preloader');
+                            	$preloader.addClass('is-shown');
+                            	console.log('cart-preloader start');
+                            	console.log($preloader);
+
+
+
+
+
+	                            	var datePickerValue = $('.js-datePicker input[name="date"]').val();
+	                            	var periodValue = $('.cart-checkout-datetime__time-inner input:checked').val();
+	                            	console.log('test_cart2');
+	                            	console.log(datePickerValue);
+	                            	console.log(periodValue);
+
+                                    var periodStillAvaliable = false;
+
+	                            	$.ajax({
+			                            url: '/udata/emarket/deliveryDateParam/'+datePickerValue+'/.json',
+			                            dataType: 'json',
+			                            async: true,
+			                            success: function(response) {
+		                                $preloader.addClass('is-shown');
+		                                console.log('check period');
+
+                                    // express доставка
+                                    if(periodValue == 'express доставка'){
+                                        if(stringToBoolean(response.deliveryExpress) === true){
+                                        console.log('YES - express доставка');
+                                        periodStillAvaliable = true;
+                                      }else{
+                                        console.log('NO - express доставка');
+                                        periodStillAvaliable = false;
+                                      }
+
+                                      //return false; // breaks
+                                    }else{
+                                        // доставка периодов
+                                        if (typeof response.period.item !== 'undefined') {
+                                            for (var j in response.period.item) {
+                                                var item = response.period.item[j],
+                                                  from = item.from.substr(0,2),
+                                                  to = item.to.substr(0,2),
+                                                  period_label = from + '-' + to;
+
+
+                                                if(periodValue == period_label){
+                                                    console.log(periodValue + ' == ' + period_label);
+                                                    periodStillAvaliable = true;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    console.log('periodStillAvaliable = ' + periodStillAvaliable);
+
+                                    if(periodStillAvaliable === false){
+                                    	console.log('periodStillAvaliable === false');
+
+
+                                        // clear calendar selected day, error,  time period
+                                        console.log('clear calendar and time period');
+                                        var $selectorInner = $('.cart-checkout-datetime__time-inner');
+                                        $selectorInner.html('');
+                                        //$('.cart-checkout-datetime .js-datePicker .datepicker--cell-day.-selected-').removeClass('-selected-');
+
+                                        $('.cart-checkout-datetime__time ').addClass('hidden');
+                                        $('.cart-checkout-datetime__notice').removeClass('hidden');
+                                        $.dispatch({
+                                            id: 'delivery-time',
+                                            type: 'error-message-show',
+                                            message: 'Выберите другую дату'
+                                        });
+                                        //\ clear calendar and time period
+
+                                        var error_msg = $('<div class="cart-error hidden-xs hidden-sm js-cart_status_fail" data-id="{@id}"><div class="cart-error__inner"><p>Выбранный интервал доставки в данный момент недоступен<br />Пожалуйста, выберите другой интервал доставки</p></div></div>');
+                                        $('.cart-error_wrap').append(error_msg);
+
+                                        $preloader.removeClass('is-shown');
+
+                                        setTimeout(function() {
+                                        	$('.cart-error_wrap').html('');
+                                        }, 5000);
+
+                                        $.dispatch({
+                                            type: 'cart-address-for-delivery',
+                                            payload: response,
+                                            allow: true
+                                        });
+                                    }else{
+                                    	console.log('periodStillAvaliable === true ');
+
+                                    	$form.data('cart_ordering',1);
+                                    	$form.data('period_still_avaliable',1);
+                                    	$form.submit();
+                                    }
+
+
+	                                }
+	                            });
+
+
+
+
+
+
+                            }
+                            //\custom add
+
                             if (xhrSubmit) {
                                 e.preventDefault();
                                 $btn.prop('disabled', true).toggleClass('request');
@@ -25817,10 +26302,15 @@ var forms = (function(window, undefined) {
                                     }
                                 });
                             }
+
+
+
                         }
                     })
-                    .off('focus selectric-before-open refresh.validate')
-                    .on('focus selectric-before-open refresh.validate', 'input, textarea, select, div[contenteditable]', function() {
+                    //.off('focus selectric-before-open refresh.validate')
+                    //.on('focus selectric-before-open refresh.validate', 'input, textarea, select, div[contenteditable]', function() {
+                  	.off('focus selectric-before-open refresh.validate change')
+                    .on('focus selectric-before-open refresh.validate change', 'input, textarea, select, div[contenteditable]', function() {
                         $(this).closest('.m-valid').removeClass('m-valid');
                         $(this).closest('.m-error').removeClass('m-error');
                     });
@@ -25863,7 +26353,7 @@ var forms = (function(window, undefined) {
             // Select
             if(!!select) {
 
-                $(select).uniform({
+                $(select).not('.js-switcher, .js-pure').uniform({
                     selectAutoWidth: false,
                     selectClass: 'e-select'
                 });
@@ -25947,12 +26437,25 @@ var forms = (function(window, undefined) {
         function _processing() {
 
             this.closest('.b-form_box').toggleClass('active', $(this).val() !== '');
+            this.closest('.b-form_box').toggleClass('empty', $(this).val() === '');
+
 
             this.on('focus blur change selectric-change', function(e) {
-
                 $(this).closest('.b-form_box').toggleClass('active', e.type === 'focus' || !!$(this).val().length);
+                /*if(e.type === 'focus' && !($(this).val().length > 0)){
+                  $(this).closest('.b-form_box').toggleClass('empty', e.type === 'focus' && !($(this).val().length > 0));
+                }*/
 
             });
+
+            this.on('input', function(e) {
+              console.log('field change');
+              console.log($(this).val().length > 0);
+              $(this).closest('.b-form_box').toggleClass('empty', !($(this).val().length > 0));
+
+            });
+
+
 
             setTimeout($.proxy(function() {
 
@@ -25971,19 +26474,35 @@ var forms = (function(window, undefined) {
             $(namespace + ' [data-masking]').each(function() {
 
                 var $field = $(this).mask($(this).data('masking'), {
+                    onInvalid: function() {
+                        $field.data('maskComplete', false);
+                    },
                     onComplete: function(cep) {
+                        $field.data('maskComplete', true);
                         $field.trigger('mask.complete', [cep]);
                     },
                     onKeyPress: function(cep) {
                     	if($field.hasClass('js-phone-field')){
+
+                    		console.log(cep);
+                    		if(cep == '+7 (8' || cep == '+7 (7'){
+                                $field.val('+7 ');
+                            }
+
+                    		console.log(cep.value);
                     		//console.log('phone keypress');
-                    		$field.data('phoneComplete', cep.replace(/\D/g, '').length === 11);
+                    		$field.data('phonecomplete', cep.replace(/\D/g, '').length === 11);
+                    		console.log('onKeyPress js-phone-field');
+                    		console.log(cep.replace(/\D/g, '').length === 11);
+                    	}
+                    	if($field.hasClass('js-cart-personal-phone')){
+                    		$field.data('phonecomplete', cep.replace(/\D/g, '').length === 11);
                     	}
                     	if($field.hasClass('js-phone-sms')){
                     		//console.log('sms code keypress');
                     		$field.data('smsCodeComplete', cep.replace(/\D/g, '').length === 4);
                     	}
-                        
+
                     }
                 });
 
@@ -26114,14 +26633,14 @@ var forms = (function(window, undefined) {
                             e.preventDefault();
 
                             step = Number($field.data('step') || 1);
-                            
+
                             min = Number($field.data('min') || step);
-                            
+
                             //custom add min for #bottles-refund
                             if($field.attr('id') == 'bottles-refund'){
                             	min = 0;
                             }
-                            //\custom add 
+                            //\custom add
 
                             var quantity = parseFloat($(this).closest('.b-spinner').find('input').val().replace(suffix, '')),
 
@@ -26234,19 +26753,26 @@ var forms = (function(window, undefined) {
                     form = $datePicker.closest('form'),
                     dateBlock = form.find('.b-checkout_datetime');
 
+                var minDatePicker = new Date();
+                if($datePicker.closest('.js-tabs-page').attr('id') == 'pickup' && minDatePicker.getHours() >= 18 && minDatePicker.getMinutes() > 0){
+                    console.log('date_pickaup');
+                    minDatePicker.setDate(minDatePicker.getDate() + 1);
+                }
+
+
                 $datePicker.datepicker({
                     inline: true,
-                    minDate: new Date(),
+                    minDate: minDatePicker,
                     onSelect: function onSelect(fd, date) {
 
                         $datePickerInput.val(fd).trigger('change').trigger('refresh.validate');
 
                         // custom add
-                        console.log('js-datePicker');
+                        /*console.log('js-datePicker');
                         //console.log(fd);
                         //clear errors
                         $('#checkout-time').parents('.b-form_box').removeClass('m-error').find('.b-form_box_error').remove();
-                        
+
                         $.ajax({
                             url: '/udata/emarket/deliveryDateParam/'+fd+'/.json',
                             dataType: 'json',
@@ -26262,9 +26788,9 @@ var forms = (function(window, undefined) {
                                 var select_html = '', j = 0;
                                 // console.log(response.noAvaliablePeriod); // TODEL
                                 if (stringToBoolean(response.noAvaliablePeriod) !== true) {
-                                
+
                                     select_html = select_html;// + '<option value=""></option>';
-                                    
+
                                     for (var i in response.period.item) {
                                         var item = response.period.item[i],
                                           from = item.from,
@@ -26276,47 +26802,58 @@ var forms = (function(window, undefined) {
 																					is_selected = 'selected';
 																				}
 																				j++;
-																				
+
                                         select_html = select_html + '<option ' + is_selected + ' value="'+period+'">'+ period +'</option>';
 
                                     }
-                                    
+
+									console.log('take_first_time');
                                     form.find('#checkout-time').html(select_html).prop('disabled', false).selectric('refresh');
                                     form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
-                            				form.find('#checkout-time').trigger('change'); 
-                                    
+                                    $.uniform.update();
+                            				form.find('#checkout-time').trigger('change');
+
+
                                     //console.log('!-noAvaliablePeriod');
                                     //console.log(select_html);
                                 } else {
                                     select_html = '<option value="">' ; //select_html;// + '<option value=""></option><option value="-">Выберите другую дату</option>';
-                            		    
-                            		    
+
+
                             		    //$('#checkout-time option').remove();
+									console.log('take_first_time_no_period');
                             		    form.find('#checkout-time').html(select_html).prop('disabled', true).selectric('refresh');
-                            		    form.find('#checkout-time').trigger('change'); 
+                                        $.uniform.update();
+                            		    form.find('#checkout-time').trigger('change');
 
                                 		form.find('#checkout-time').parents('.b-form_box').addClass('m-error').append( '<div class="b-form_box_error">Выберите другую дату</div>' );
-                                		
+
+										if( form.find('#checkout-time option').length == 1  && form.find('#checkout-time option:eq(0)').val() == '') {
+											console.log('empty time');
+											if(form.find('.datepicker--cell-day.-current-').length > 0){
+												form.find('.datepicker--cell-day.-current-').next().trigger('click');
+											}
+										}
                                 		//console.log('noAvaliablePeriod');
                                     //console.log(select_html);
                                 }
                                 //select_html = select_html + '</select>';
                                 //console.log(select_html);
-                                
+
                                 //dateBlock.find('select').prop('disabled', false).selectric('refresh');
-                                
-                                
-                                
+
+
+
                                 //$('.js-checkout-time_wrap').html(select_html);
                                 //forms.styleSelects('.js-checkout-time_wrap select.js-selectric');
-                                
-                                
+
+
                                 // console.log(response.result);
                                 // if (parseInt(response.result) > 0) {
                                 //     water_amount = response.result;
                                 // }
                             }
-                        });
+                        });*/
                         //\ custom add
 
                     }
@@ -26492,6 +27029,9 @@ var formNotifications = (function(window, undefined) {
         var $notice = this.find('.b-form_message').length ? this.find('.b-form_message') : $('<div class="b-form_message"></div>').prependTo(this),
             suffix = status ? 'success' : 'error';
 
+      console.log('msg' + msg);
+      console.log($notice);
+      console.log(this);
         if (hideForm) {
 
             $notice
@@ -26617,6 +27157,7 @@ var formNotifications = (function(window, undefined) {
 
             $field
                 .removeClass(settings.validClass)
+                .removeClass('m-successful') // custom add
                 .addClass(settings.errorClass);
 
         }, 100);
@@ -26634,6 +27175,7 @@ var formNotifications = (function(window, undefined) {
         var $field = this.closest('.b-form_box');
 
         $field.removeClass(settings.errorClass);
+        $field.removeClass('m-successful'); // custom add
         $field.find('.b-form_box' + settings.errorSuffix).remove();
 
         if ($field.find('[data-required]').length) {
@@ -26708,6 +27250,9 @@ var xhrFormHandler = (function(window, undefined) {
         var $form = this,
             message = '';
 
+        console.log('xhrFormHandler this.closest(.b-form)');
+        console.log(this);
+        console.log(this.closest('.b-form'));
         // start check
         if (typeof response.fields === 'boolean' && response.fields) {
 
@@ -26809,7 +27354,12 @@ var siteModules = (function(window, undefined) {
 
                 var $accordion = $(this),
                     screens = !!$accordion.data('resolutions') ? $accordion.data('resolutions').split(',') : ['xs', 'sm', 'md', 'lg'],
-                    selector = $accordion.data('actionOnLink') ? 'li > a, li > span' : 'li > a > .js-accordion-trigger, li > span';
+
+					// custom add
+                    //selector = $accordion.data('actionOnLink') ? 'li > a, li > span' : 'li > a > .js-accordion-trigger, li > span';
+                    selector = $accordion.data('actiononlink') ? 'li > a, li > span' : 'li > a > .js-accordion-trigger, li > span';
+
+                console.log(selector);
 
                 $accordion.data('screens', screens);
 
@@ -27400,6 +27950,9 @@ var siteModules = (function(window, undefined) {
                             if (typeof options.onToggle !== 'undefined' && options.onToggle) {
                                 options.onToggle.call($wg, $(this), $(this).closest(options.selector).find(options.selector + '-page' + ($(this).data('href') || $(this).attr('href'))));
                             }
+
+                            // Dispatch
+                            $(this).trigger('tabs.change-event');
 
                             // Refresh floated
                             if (!$wg.data('hoverTabs') && $(this).is('a[href*="#"]')) {
@@ -28764,6 +29317,15 @@ var sitePlugins = (function(window, undefined) {
                     $leaflet.data('arenda_item_type',arenda_item_type);
                     //\ custom add
 
+                    // custom add add info for not_available form
+                    var arenda_button = leaflet.elements.link,
+                      not_available_item_href = arenda_button.data('not_available_item_href'),
+                      not_available_item_title = arenda_button.data('not_available_item_title');
+
+                    $leaflet.data('not_available_item_href', 'https://www.vodovoz-spb.ru' + not_available_item_href);
+                    $leaflet.data('not_available_item_title',not_available_item_title);
+                    //\ custom add
+
                 },
                 beforeClose: function(leaflet) {
 
@@ -28787,6 +29349,16 @@ var sitePlugins = (function(window, undefined) {
                     $(".arenda_month_form .arenda_info").html(arenda_item_title);
                     $(".arenda_month_form #arenda_type").val(arenda_item_type);
                     //\ custom add
+
+                    // custom add add info for not_available form
+                    var not_available_popup = $('.b-leaflet'),
+                      not_available_item_href = not_available_popup.data('not_available_item_href'),
+                      not_available_item_title = not_available_popup.data('not_available_item_title');
+
+                    $(".not_available_form #not_available_item_href").val(not_available_item_href);
+                    $(".not_available_form #not_available_item_title").val(not_available_item_title);
+                    //\ custom add
+
 
                     // Forms
                     forms.init('.b-leaflet');
@@ -28835,6 +29407,9 @@ var sitePlugins = (function(window, undefined) {
                 overlayOpacity: .5,
                 selector: '.js-videoBox'
             }));
+
+
+
 
             $('body')
                 .off('click.closeLeafletPopups')
@@ -28985,7 +29560,7 @@ var shopModules = (function(window, undefined) {
                     if(typeof this.origin_price != 'undefined'){
                         actualPrice = this.price;
                         originPrice = this.origin_price;
-                        origin_sum_text = ' <strike class="old_sum">'+ (originPrice * amount) +'</strike>';
+                        origin_sum_text = ' <span class="old_sum">'+ (originPrice * amount) +'</span>  ₽';
                     }
                 }
             });
@@ -29013,7 +29588,8 @@ var shopModules = (function(window, undefined) {
             // console.log(origin_sum_text);
             // console.log(amount);
 
-            this.find('[data-actual-sum]').data('actualSum', actualPrice * amount).html(origin_sum_text + actualPrice * amount);
+            this.find('[data-actual-sum]').data('actualSum', actualPrice * amount).html(actualPrice * amount);
+            this.find('[data-actual-sum]').parent().find('.old_sum_wrap').html(origin_sum_text);
             this.find('[data-actual-price]').data('actualPrice', actualPrice).html(actualPrice);
 
             // custom add
@@ -29099,11 +29675,24 @@ var shopModules = (function(window, undefined) {
 
                             // custom add
                             // заблокировать другие промонаборы, если уже какой-то куплен
+                            console.log('isPromo');
+                            console.log(response);
+                            console.log(response.isPromo);
                             if (!!response.isPromo) {
-                                if(response.isPromo === '1') {
+                                if(response.isPromo == '1') {
+                                    console.log('isPromo = 1');
                                     //.not('[data-id="1027"]') // исключение для промонабора гречневый каратнтин
 
-                                    $('.js-add-to-cart.isPromo').not('.inCart')
+                                    if (!!response.is_promo_replace) {
+                                        console.log('is_promo_replace');
+                                        console.log(response.is_promo_replace);
+                                        if(response.is_promo_replace == '1') {
+                                            $('.b-footer_cart').addClass('promo_replaced_block');
+                                            $('.promo_replaced').removeClass('hidden');
+                                        }
+                                    }
+
+                                    /*$('.js-add-to-cart.isPromo').not('.inCart')
                                       .not('[data-id="1027"]') // исключение для промонабора гречневый каратнтин
                                       .data('originalLabel', $this.text())
                                       .toggleClass(response.btnClass, true)
@@ -29115,7 +29704,9 @@ var shopModules = (function(window, undefined) {
                                       .data('originalLabel', $this.text())
                                       .toggleClass(response.btnClass, true)
                                       .text('Недоступно')
-                                      .attr('disabled','disabled');
+                                      .attr('disabled','disabled');*/
+
+
                                 }
                             }
                             // custom add
@@ -29165,9 +29756,59 @@ var shopModules = (function(window, undefined) {
                             }
                         }
 
+												console.log('start recommend check');
                         if (!!response.cart) {
                             _updateCartWidget(response.cart);
+
+                            // прячем кнопку оформить заказ, и показываем поле для ввода кол-ва
+                            if($this.parents('.recommended_items').length > 0){
+                            	console.log('load  recommend change btn');
+                            	var bottom_recommend_box = $this.closest('.bottom_recommend_box');
+                            	var cart_item_id = (!!response['attribute:id']) ? response['attribute:id'] : '';
+                            	var new_amount = parseInt($('.recommend-good-amount spinner-input input', bottom_recommend_box).val()) + 1;
+                            	$('.recommend-good-amount', bottom_recommend_box).removeClass('hidden').data('cart-item-id', cart_item_id);
+                            	$('.recommend-good-amount spinner-input input', bottom_recommend_box).val(new_amount).trigger('blur').trigger('change');
+                            	$('.recommend_btn_add', bottom_recommend_box).addClass('hidden');
+                            }
                         }
+  
+                          console.log('is wheel item?');
+                          if (!!response.item && !!response.item.wheel) {
+                            
+                            if (!!response.item.wheel.name) {
+                              console.log('wheel add item');
+                              // выводим подарочный товар
+                              var img = '';
+                              if (!!response.item && !!response.item.wheel && !!response.item.wheel.img) {
+                                img = '<img src="' + response.item.wheel.img + '"/>';
+                              }
+                              var html = '<div class="wheel_product cart-table-good cart-table__item"><div class="wheel_product_img cart-table-good__pic">' + img + '</div><div class="wheel_product_self"><div class="wheel_product_name cart-table-good__title">' + response.item.wheel.name + '</div><div class="wheel_product_cnt">ПОДАРОК</div></div><div class="wheel_product_price">бесплатно</div> </div>';
+                              $('.cart-table .wheel_product').remove();
+                              $('.cart-table').append(html);
+    
+                              // обновляем информацию о скидке wheel
+                              //$json_data['item']['wheel']['discount']
+                              console.log('try wheel discount update');
+                              if(!!response.item && !!response.item.wheel && !!response.item.wheel.discount && !!response.item.wheel.discount.status && !!response.item.wheel.discount.item){
+                                console.log('try wheel discount update');
+                                $.dispatch({
+                                  type: 'cart-discount-update',
+                                  payload: response.item.wheel.discount.item,
+                                  status: response.item.wheel.discount.status,
+                                  reason: 'wheelDiscount'
+                                });
+  
+                                if (!!response['cart']) {
+                                  $.dispatch({
+                                    type: 'cart-table-update',
+                                    payload: response,
+                                    status: response.status
+                                  });
+                                }
+                              }
+                            }
+                            
+                          }
                     }
                 }
             });
@@ -29177,7 +29818,7 @@ var shopModules = (function(window, undefined) {
     }
 
     function _updateCartWidget(data) {
-        var $footerCart = $('.b-footer_cart'),
+        /*var $footerCart = $('.b-footer_cart'),
 
             $footerCartSum = $('[data-sum]', $footerCart),
             $footerCartAmount = $('[data-amount]', $footerCart);
@@ -29193,11 +29834,33 @@ var shopModules = (function(window, undefined) {
             .text(data.amount);
 
         $footerCart
-            .toggleClass('show', data.amount > 0)
+            .toggleClass('show', data.amount > 0)*/
+
+
+        var $topCart = $('.v-header-darkline__cart'),
+            $topCartAmount = $('[data-amount]', $topCart),
+            $topCartEmptyNotice = $('.js_cart_empty_notice', $topCart);
+
+        data.amount = data.amount.isInteger() ? data.amount : 0;
+
+        if(data.amount > 0){
+          $topCart.addClass('v-header-darkline__cart--full').removeClass('v-header-darkline__cart--empty');
+
+        }else{
+          $topCart.removeClass('v-header-darkline__cart--full').addClass('v-header-darkline__cart--empty');
+        }
+        $topCartEmptyNotice.toggleClass('hidden', data.amount > 0);
+
+        $topCartAmount
+            .toggleClass('hidden', !(data.amount > 0))
+            .data('amount', data.amount)
+            .text(data.amount);
+
+
     }
 
     function requestHandler(response, $item, $list, $cartTotal) {
-        
+
         if (!!response.status) {
             if (!!response.cart) {
                 _updateCartWidget(response.cart);
@@ -29224,7 +29887,7 @@ var shopModules = (function(window, undefined) {
 	                            price = 'NULL',
 	                            new_amount = 'NULL',
 	                            sum = 'NULL';
-	
+
 	                        if (!!item["price"]) {
 	                            price = item["price"].actual;
 	                        }
@@ -29234,21 +29897,21 @@ var shopModules = (function(window, undefined) {
 	                        if (!!item["amount"]) {
 	                            new_amount = item["amount"];
 	                        }
-											
+
 	                        var $currentItem = $('.b-cart_table_feed .cart_item_' + item_id);
-	
+
 	                        $currentItem
 	                            .find('[data-price]')
 	                            .data('price', price);
-	
+
 	                        var actualPriceArray = $currentItem.find('[data-actual-price-array]').data('actual-price-array'),
 	                            actualPrice = 0,
 	                            originPrice = 0,
-	
+
 	                            index = 0,
-	
+
 	                            origin_sum_text = '';
-	
+
 	                        $.each(actualPriceArray, function(i) {
 	                            // if (amount >= this.range[0] && (this.range.length > 1 ? amount <= this.range[1] : actualPriceArray.length === i + 1 ? true : amount <= this.range[0]))
 	                            if (
@@ -29271,7 +29934,7 @@ var shopModules = (function(window, undefined) {
 	                                }
 	                            }
 	                        });
-	
+
 	                        $currentItem
 	                            .find('[data-price]')
 	                            .html(origin_sum_text + sum.toString());
@@ -29310,6 +29973,8 @@ var shopModules = (function(window, undefined) {
                     console.log('change.updateCart');
                     console.log(response);
                     requestHandler(response, $item, $list, $cartTotal);
+
+					$('.js-tabs-btn.current').trigger('click');
                 }
             });
             //\custom add
@@ -29328,7 +29993,7 @@ var shopModules = (function(window, undefined) {
 
                 formData = $item.find('input, select, textarea').serializeObject(),
                 data = $.extend({ customAction: 'remove' }, $btn.data(), formData);
-                
+
 
             $.ajax({
                 url: $btn.attr('href') || $btn.data('url') || window.location,
@@ -29336,6 +30001,15 @@ var shopModules = (function(window, undefined) {
                 dataType: 'json',
                 data: data,
                 success: function(response) {
+
+
+						        if($btn.hasClass('js-cart-clear')){
+						        	console.log('cart-clear');
+						        	$.dispatch({
+						              type: 'cart-clear'
+						          });
+						        }
+
                     if (!!response.status) {
 
                         if (!!response.cart) {
@@ -29381,7 +30055,7 @@ var shopModules = (function(window, undefined) {
                         // custom add
 
                         var itemsLength = $list.find('.b-cart_table_item').length;
-												
+
 												console.log('-on remove-');
 												console.log(itemsLength);
 												console.log($list.find('.b-cart_table_item'));
@@ -29396,9 +30070,9 @@ var shopModules = (function(window, undefined) {
                                         		console.log($item);
                                             $item.remove();
                                             _cartTableTotal.call($list, true);
-                                            
+
                                             var itemsLength = $list.find('.b-cart_table_item').length;
-												
+
 																						console.log('-on remove again-');
 																						console.log(itemsLength);
 																						console.log($list.find('.b-cart_table_item'));
@@ -29416,9 +30090,9 @@ var shopModules = (function(window, undefined) {
                                             complete: function() {
                                                 $item.remove();
                                                 _cartTableTotal.call($list, true);
-                                                
+
                                                 var itemsLength = $list.find('.b-cart_table_item').length;
-												
+
 																								console.log('-on remove again2-');
 																								console.log(itemsLength);
 																								console.log($list.find('.b-cart_table_item'));
@@ -29429,12 +30103,17 @@ var shopModules = (function(window, undefined) {
                                         });
                                 }
                             }
-                            
+
                             // add custom update cart item price
                             requestHandler(response, $item, $list, $cartTotal);
+
+                            // add custom recalc discount item
+                            $('.js-tabs-btn.current').trigger('click');
                         }
                         else {
                             _clearCart.call($list);
+
+
                         }
                     }
 
@@ -29447,7 +30126,7 @@ var shopModules = (function(window, undefined) {
 
     function _clearCart() {
     		console.log('_clearCart');
-    	
+
         this
             .add($('.b-checkout_footer'))
             .toggleClass('fade', true)
@@ -29466,16 +30145,16 @@ var shopModules = (function(window, undefined) {
             .removeClass('hidden')
             .slideDown({ duration: 400, easing: 'easeOutQuart' })
             .removeClass('fade');*/
-        
-        // custom add hide cart form    
+
+        // custom add hide cart form
         $('.b-cart_notice')
         		.removeClass('hidden')
             .slideDown({ duration: 400, easing: 'easeOutQuart' })
             .removeClass('fade')
 						.nextAll()
             .hide();
-            
-            
+
+
         $('.b-checkout_full')
             .slideUp({ duration: 400, easing: 'easeOutQuart' });
     }
@@ -29673,11 +30352,11 @@ var shopModules = (function(window, undefined) {
                             datePicker.removeClass('disabled');
                             dateBlock.find('select').prop('disabled', false).selectric('refresh');
                             forms.toggleValidation.call(dateBlock, true, false);
-                            
+
                             // add custom take current day
                             //console.log(form.find('.datepicker--cell-day.-current-'));
-                            
-                            /*form.find('.datepicker--cell-day.-current-').trigger('click');                            
+
+                            /*form.find('.datepicker--cell-day.-current-').trigger('click');
                             form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
                             form.find('#checkout-time').trigger('change');  */
                         }
@@ -29712,7 +30391,7 @@ var shopModules = (function(window, undefined) {
             });
         });
     }
-    
+
     $body.on('change.emitActionForPhoneConfirmation emit.actionForPhoneConfirmation', '.b-checkout_form input, .b-checkout_form select', function (e) {
             //console.log('check sms code fields');
             var $form = $(this).closest('form'),
@@ -29724,33 +30403,34 @@ var shopModules = (function(window, undefined) {
             $form.find("[data-required-phone]").each(function(){
             	var $curr_field = $(this),
             			$curr_field_required = $curr_field.data('required');
-            			
-            	
+
+
             	$curr_field
             		.attr('data-old-required', !!$curr_field_required)
                 .data('old-required', !!$curr_field_required);
-                
+
               $curr_field
                 .attr('data-required', true)
                 .data('required', true);
-                
+
             	//console.log('verifed-filed:');
             	//console.log($curr_field);
             });
-            
+
             // validate field for sms code
             var verifed = $.verifyForm($form, { type: 'submit' }, {}),
                 smsCode = $form.find('.js-phone-sms').data('smscodevalid') === true || $form.find('.js-phone-sms').data('smscodevalid') === '' ; //!!$('.js-phone-sms').data('smscodevalid');
-						
+
 						//console.log('verifed:' + verifed);
 						//console.log('smsCode:' + smsCode);
             if (verifed && smsCode) {
                 target.prop('disabled', false);
             }
             else {
-                target.prop('disabled', true).prop('checked', true);
+                //target.prop('disabled', true).prop('checked', true);
+                target.prop('disabled', true).prop('checked', false);
             }
-            
+
             //set all required-phone field to old required value
             $form.find("[data-required-phone]").each(function(){
             	var $curr_field = $(this),
@@ -29759,15 +30439,63 @@ var shopModules = (function(window, undefined) {
               $curr_field
                 .attr('data-required', !!$old_field_required)
                 .data('required', !!$old_field_required);
-                
-            	
+
+
             });
-            
+
         });
 
     function phoneConfirmation() {
     		var isSent = false;
-    		
+
+		function recaptcha_delivery_suc() {
+			var $btn = $('#delivery .js-phone-sms-send'),
+				$wg = $btn.closest('.js-phone'),
+				$timer = $wg.find('.js-phone-sms-timer'),
+				$field = $wg.find('.js-phone-field');
+
+			//hide recaptcha
+			$btn.closest('form').find('.g-recaptcha').addClass('hidden');
+
+			$btn.data('repeat_count', 0);
+			$timer
+				.removeClass('hidden')
+				.find('[data-timer]')
+				.html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+
+			smsCountDown(function() {
+				isSent = false;
+				$timer.addClass('hidden');
+				$btn.removeClass('hidden');
+				$field.prop('hidden', false);
+			}, $timer.find('[data-timer]'));
+		};
+		function recaptcha_pickup_suc() {
+			var $btn = $('#pickup .js-phone-sms-send'),
+				$wg = $btn.closest('.js-phone'),
+				$timer = $wg.find('.js-phone-sms-timer'),
+				$field = $wg.find('.js-phone-field');
+
+			//hide recaptcha
+			$btn.closest('form').find('.g-recaptcha').addClass('hidden');
+
+			$btn.data('repeat_count', 0);
+			$timer
+				.removeClass('hidden')
+				.find('[data-timer]')
+				.html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+
+			smsCountDown(function() {
+				isSent = false;
+				$timer.addClass('hidden');
+				$btn.removeClass('hidden');
+				$field.prop('hidden', false);
+			}, $timer.find('[data-timer]'));
+		}
+
+		window.recaptcha_delivery_suc = recaptcha_delivery_suc;
+		window.recaptcha_pickup_suc = recaptcha_pickup_suc;
+
         $body.on('keyup.inputPhone', '.js-phone-field', function(e) {
             var $field = $(this),
                 $wg = $field.closest('.js-phone'),
@@ -29775,8 +30503,11 @@ var shopModules = (function(window, undefined) {
                 $timer = $wg.find('.js-phone-sms-timer'),
                 $pre_send_btn = $wg.find('.b-checkout_contacts_sms_send_btn'),
                 $btn = $wg.find('.js-phone-sms-send'),
-                isComplete = $field.data('phoneComplete');
+                isComplete = $field.data('phonecomplete');
 
+            console.log($field);
+            console.log(isComplete);
+            console.log($pre_send_btn);
             if (!$sms.data('required')) {
                 forms.toggleValidation.call($sms.closest('.b-checkout_contacts_sms'), true, true);
             }
@@ -29784,12 +30515,12 @@ var shopModules = (function(window, undefined) {
             if (isComplete && $wg.data('url') && !isSent) {
                 // show presend btn
                 $pre_send_btn.show();
-                
+
                 //isSent = true;
                 //sendSMS($wg, $field, $timer, $btn);
             }
         });
-        
+
         $body.on('keyup.inputPhone', '.js-phone-sms', function(e) {
             var $field = $(this),
                 $wg = $field.closest('.js-phone'),
@@ -29810,7 +30541,8 @@ var shopModules = (function(window, undefined) {
                 $sms_send_repeat = $wg.find('.js-phone-sms-send'),
                 $phone_sms_field = $wg.find('.js-phone-sms'),
                 $sms_wrap = $wg.find('.js-phone-sms-wrap'),
-                isComplete = $field.data('phoneComplete'),
+				$btn_phone_edit = $wg.find('.js-phone-edit'),
+                isComplete = $field.data('phonecomplete'),
                 isSmsValid = $phone_sms_field.data('smscodevalid');
 
 						console.log($phone_sms_field);
@@ -29819,19 +30551,52 @@ var shopModules = (function(window, undefined) {
             		isSent = true;
             		$btn.hide();
             		$sms_wrap.removeClass('hidden');
+					$btn_phone_edit.show();
+
                 sendSMS($wg, $field, $timer, $sms_send_repeat);
             }
         });
-        
+
+        $body.on('click.repeatSMS', '.js-phone-edit', function(e) {
+            var $btn = $(this),
+                $wg = $btn.closest('.js-phone'),
+                $timer = $wg.find('.js-phone-sms-timer'),
+                $field = $wg.find('.js-phone-field'),
+                $sms_send_repeat = $wg.find('.js-phone-sms-send'),
+                $phone_sms_field = $wg.find('.js-phone-sms'),
+                $sms_wrap = $wg.find('.js-phone-sms-wrap'),
+				$btn_phone_sms_presend = $wg.find('.js-phone-sms-presend'),
+                isComplete = $field.data('phonecomplete'),
+                isSmsValid = $phone_sms_field.data('smscodevalid');
+
+            // обнулить таймер смс
+			$timer.addClass('hidden');
+			clearTimeout(smsCountDownTimer);
+
+			// открыть для редактирования поле с телефоном
+			$field.prop('readonly', false);
+
+			// спрятать кнопки для подтвержения смс и кнопку подтвердить телефон
+			$sms_send_repeat.addClass('hidden');
+			$field.data('smscodevalid', false);
+			isSent = false;
+			$sms_wrap.addClass('hidden');
+
+			$btn.hide();
+
+        });
+
         $body.on('click.repeatSMS', '.js-phone-sms-send', function(e) {
             var $btn = $(this),
                 $wg = $btn.closest('.js-phone'),
                 $timer = $wg.find('.js-phone-sms-timer'),
                 $field = $wg.find('.js-phone-field'),
-                isComplete = $field.data('phoneComplete');
+
+                isComplete = $field.data('phonecomplete');
 
             if (isComplete && $wg.data('url') && !isSent) {
             		isSent = true;
+
                 sendSMS($wg, $field, $timer, $btn);
             }
         });
@@ -29853,24 +30618,39 @@ var shopModules = (function(window, undefined) {
 
         function sendSMS($wg, $field, $timer, $btn) {
         		// custom add
-    				var $field_confirm_by_phone = $field.parents('form').find('.js-confirm-by-phone'); 
+    				var $field_confirm_by_phone = $field.parents('form').find('.js-confirm-by-phone');
+        		//$field_confirm_by_phone.prop('disabled', true).prop('checked', true);
         		$field_confirm_by_phone.prop('disabled', true).prop('checked', true);
         		//\ custom add
-        	
+
+
             $btn.addClass('hidden');
             $field.prop('readonly', true);
 
-            $timer
-                .removeClass('hidden')
-                .find('[data-timer]')
-                .html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+            // custom add проверка на кол-во повторных отправок sms
 
-            smsCountDown(function() {
-            		isSent = false;
-                $timer.addClass('hidden');
-                $btn.removeClass('hidden');
-                $field.prop('hidden', false);
-            }, $timer.find('[data-timer]'))
+			var repeat_count = (!!$btn.data('repeat_count') && $btn.data('repeat_count') > 0) ? $btn.data('repeat_count') + 1 : 1;
+			console.log('repeat_count');
+			console.log($btn.data('repeat_count'));
+			console.log(repeat_count);
+			$btn.data('repeat_count', repeat_count);
+            if(repeat_count < 3){
+				$timer
+					.removeClass('hidden')
+					.find('[data-timer]')
+					.html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+
+				smsCountDown(function() {
+						isSent = false;
+					$timer.addClass('hidden');
+					$btn.removeClass('hidden');
+					$field.prop('hidden', false);
+				}, $timer.find('[data-timer]'))
+			}else{
+            	//show recaptcha
+				$btn.closest('form').find('.g-recaptcha').removeClass('hidden');
+			}
+			//\ custom add
 
             $.ajax({
                 url: $wg.data('url'),
@@ -29879,17 +30659,19 @@ var shopModules = (function(window, undefined) {
                 data: {
                     phone: $field.val()
                 },
-                success: function(response) {}
+                success: function(response) {
+
+                }
             });
         }
-        
+
         function checkSMS($wg, $field) {
         		$field.parents('.b-form_box').removeClass('m-error');
             $field.parent().find('.b-form_box_error').remove();
-            
+
             $field.prop('readonly', true);
             $field.data('smscodevalid', false);
-            
+
             var $field_confirm_by_phone = $field.parents('form').find('.js-confirm-by-phone'),
             		$wg = $field.closest('.js-phone'),
                 $timer = $wg.find('.js-phone-sms-timer'),
@@ -29905,14 +30687,14 @@ var shopModules = (function(window, undefined) {
                 success: function(response) {
                 	var msg = 'Что-то пошло не так',
                 			is_successful = false;
-                	
+
                 	$field.data('smscodevalid', false);
-                	
+
                 	if(!!response.code && !! response.msg){
                 		msg = response.msg;
 	                	if(!(response.code == 10 || response.code == 30)){
 	                		$field.prop('readonly', false);
-	                		
+
 	                		//код НЕ верный заблокировать галочку "Хочу подтвердить заказ по телефону"
 	                		$field.data('smscodevalid', false);
 	                		console.log('no - smscodevalid');
@@ -29920,11 +30702,11 @@ var shopModules = (function(window, undefined) {
                       //forms.toggleValidation.call($('.b-checkout_address_additional'), false, false);
 	                	}else{
 	                		$field.prop('readonly', true);
-	                		
+
 	                		//код верный разблокировать галочку "Хочу подтвердить заказ по телефону"
 	                		$field.data('smscodevalid', true);
 	                		console.log('smscodevalid');
-	                		
+
 	                		if($field.parents('form').find('#delivery-customer').length > 0){
 	                			$field.parents('form').find('#delivery-customer').trigger('change');
 	                		}
@@ -29933,20 +30715,20 @@ var shopModules = (function(window, undefined) {
 	                		}
                       //$field_confirm_by_phone.prop('disabled', false).prop('checked', true);
                       //forms.toggleValidation.call($('.b-checkout_address_additional'), true, false);
-                      
+
                       // скрыть кнопку повторной отправки смс
                       $btn.addClass('hidden');
 
             					// сбросить счетчик
             					$timer.addClass('hidden');
             					clearTimeout(smsCountDownTimer);
-            					
+
             					// добавить класс лоя зеленой подсветки
             					is_successful = true;
 
 	                	}
                 	}
-                	
+
                 	// непонятная ошибка
                 	$field.parents('.b-form_box').addClass('m-error');
                 	if(is_successful){
@@ -29954,15 +30736,15 @@ var shopModules = (function(window, undefined) {
                 	}else{
                 		$field.parents('.b-form_box').removeClass('m-successful');
                 	}
-                	
+
                 	$field.prop('readonly', false);
                 	if($field.parents('.b-form_box').find('.b-form_box_error').length > 0){
                 		$field.parents('.b-form_box').find('.b-form_box_error').text(msg);
                 	}else{
                 		$field.after( '<div class="b-form_box_error">' + msg + '</div>' );
                 	}
-                	
-                	
+
+
                 }
             });
         }
@@ -30021,7 +30803,7 @@ var shopModules = (function(window, undefined) {
                                 current: $('.b-checkout_full_tabs .current').data('href')
                             });
                           }
-                        
+
                     });
                 }
                 else {
@@ -30048,7 +30830,7 @@ var shopModules = (function(window, undefined) {
                 $cart = $('.js-cart'),
                 $cartTotal = $('.b-cart_table_footer', $cart),
                 $list = $promoCodeRow.closest('.b-cart_feed');
-                
+
 
             $form.data('applied', false);
             helpers.delay.call($form, function() {
@@ -30056,7 +30838,7 @@ var shopModules = (function(window, undefined) {
                   url: $this.data('url'),
                   method: $this.data('method') || 'post',
                   dataType: 'json',
-                  
+
                   success: function(response) {
                       if (!!response.status) {
                       		$field.val('').prop('readonly', false);
@@ -30064,31 +30846,31 @@ var shopModules = (function(window, undefined) {
                           $promoCodeRow.addClass('hidden');
                           formNotifications.hideErrorLabel.call($form);
 
-                          
-                          
+
+
                           $('.b-checkout_full')
 	                          .trigger('tabs.change', {
 	                              current: $('.b-checkout_full_tabs .current').data('href')
 	                          });
-	                        
+
 	                        if (!!response['cart']) {
                               requestHandler(response['cart'], $promoCodeRow, $list, $cartTotal);
                           }
-	                          
+
                       }
                   }
               });
             });
-         
-            
-            
+
+
+
         });
     }
 
     function pickupDiscount() {
         $body
             .on('tabs.change emit.checkoutType', '.b-checkout_full', function(e, data) {
-                
+
                 var isPickup = data.current === '#pickup',
                     promoCodeApplied = $('.b-cart_tools_promoCode .form').data('applied');
 
@@ -30106,7 +30888,7 @@ var shopModules = (function(window, undefined) {
                     $list = $pickupDiscountRow.closest('.b-cart_feed');
 
                 var requestData = $.extend({ customAction: 'pickupDiscount' }, $this.find('[data-get-discount-params].current').data('getDiscountParams'));
-				
+
                 $.ajax({
                     url: $this.data('getDiscount') || window.location,
                     method: $form.data('method') || 'post',
@@ -30120,7 +30902,7 @@ var shopModules = (function(window, undefined) {
 
                                 $pickupDiscountRow.removeClass('hidden');
                             }
-                            // custom add hide discount 
+                            // custom add hide discount
                             else{
                             	$pickupDiscountRow.addClass('hidden');
                             }
@@ -30140,7 +30922,7 @@ var shopModules = (function(window, undefined) {
                     }
                 });
             });
-            
+
 				$('.b-checkout_full').trigger('emit.checkoutType', {
             current: $('.b-checkout_full_tabs .current').data('href')
         });
@@ -30198,7 +30980,507 @@ var shopModules = (function(window, undefined) {
             pickupDiscount();
             refundBottles();
 
+        },
+        _updateCartWidget:_updateCartWidget,
+    };
+
+})(window);
+var cartFunctions = (function(window, undefined) {
+    'use strict';
+
+    var $body = $('body');
+
+    var dict = {
+        noDeliveryPrice: 'укажите адрес/время',
+        promocodeDiscount: ' за промокод',
+        pickupDiscount: ' за самовывоз'
+    };
+
+    var store = {
+        discount: {
+            pickup: false,
+            promocode: false
+        },
+        deliveryType: 'delivery',
+        deliveryPrice: 0
+    };
+
+    function emailAndFormConfirm() {
+        var $confirmationCheckbox = $('.js-confirm-by-phone');
+
+        /*$body.on('keyup change input paste', '.js-cart-email', function() {
+            if ($(this).val().length === 0) {
+                $confirmationCheckbox.prop('checked', true).prop('disabled', true);
+            }
+            else {
+                $confirmationCheckbox.prop('disabled', false);
+            }
+        });*/
+    }
+
+    function deliveryOrPickup() {
+        $body.on('tabs.change-event', '.cart .js-tabs-btn', function(e) {
+            e.preventDefault();
+
+            $.dispatch({
+                type: 'cart-delivery-type-change',
+                payload: $(this).data('href')
+            });
+
+            // custom add hide summary info by pukup
+            console.log('hide summary info by pukup');
+
+            store.deliveryType = $(this).data('href');
+            console.log(store.deliveryType);
+            console.log(store.deliveryType === '#pickup');
+            $.dispatch({
+				       type: 'cart-time-container-toggle',
+				       payload: store.deliveryType === '#pickup'
+				    });
+
+				    	// remove adress
+				    	var $address = $('.js-delivery-address');
+
+              //$address.trigger('emit.action');
+
+              $address.data('isComplete', false)
+              				.val('')
+                      .trigger('change').trigger('refresh.validate');
+
+				    // custom add hide summary info by pukup
+
+				    // custom add hide payment item
+				    var hide_payment_item;
+            var pickupHideId = $('cart-payment').data('pickupHideId');
+            var deliveryHideId = $('cart-payment').data('deliveryHideId');
+            console.log('hide payment item');
+            console.log(pickupHideId);
+            console.log(deliveryHideId);
+
+            if(store.deliveryType === '#pickup'){
+            	hide_payment_item = pickupHideId.split(',');
+          	}else{
+          		hide_payment_item = deliveryHideId.split(',');
+          	}
+
+            	$('.payment_item').show();
+            	console.log(hide_payment_item);
+            	for (var i in hide_payment_item) {
+		            if (hide_payment_item.hasOwnProperty(i)) {
+		                var item_id = hide_payment_item[i];
+		                var payment_element = $('.payment_item_' + item_id);
+
+		                console.log(item_id);
+		                console.log(payment_element);
+
+		                if(payment_element.length > 0){
+		                	payment_element.hide();
+		                }
+		            }
+		        	}
+
+
+            //\ custom add hide payment item
+
+            setCustomPickupDiscount($(this).data('href'));
+        });
+    }
+
+    function setCustomPickupDiscount(deliveryType) {
+    	console.log('setCustomPickupDiscount');
+        store.deliveryType = deliveryType.substring(1);
+
+        var url = $('.cart [data-get-ship-discount]').data('getShipDiscount') || '/udata/emarket/setCustomPickupDiscount.json';
+        var data = $.extend(
+          {
+              customAction: 'pickupDiscount'
+          },
+          $('.cart [data-get-ship-discount-params].current').data('getShipDiscountParams')
+        );
+
+        console.log(url);
+        console.log(data);
+
+
+        var promoCodeApplied = $('cart-promocode .cart-summary__promo-code-input input').data('applied');
+
+        // Скрываем сообщения под товарами
+        $.dispatch({
+            type: 'cart-notice-hide'
+        });
+
+        $.ajax({
+            url: url,
+            method: 'post',
+            dataType: 'json',
+            data: data,
+            success: function(response) {
+                if (!!response.status && !promoCodeApplied) {
+                    if (!!response['item']) {
+                        $.dispatch({
+                            type: 'cart-discount-update',
+                            payload: response['item'],
+                            status: response.status,
+                            reason: store.deliveryType
+                        });
+                    }
+
+                    if (!!response['cart']) {
+                        $.dispatch({
+                            type: 'cart-table-update',
+                            payload: response['cart'],
+                            status: response.status
+                        });
+                    }
+
+                    // Выводим сообщения под товарами
+                    /*if (!!response['cart_notice']) {
+                        $.dispatch({
+                            type: 'cart-notice-show',
+                            message: response['cart_notice']
+                        });
+                    }*/
+                }
+                else if (!promoCodeApplied) {
+                    if (!!response['item']) {
+                        $.dispatch({
+                            type: 'cart-discount-update',
+                            payload: response['item'],
+                            status: response.status,
+                            reason: store.deliveryType
+                        });
+                    }
+
+                    if (!!response['cart']) {
+                        $.dispatch({
+                            type: 'cart-table-update',
+                            payload: response['cart'],
+                            status: response.status
+                        });
+                    }
+
+                    /*if (!!response['cart_notice']) {
+                        $.dispatch({
+                            type: 'cart-notice-show',
+                            message: response['cart_notice']
+                        });
+                    }*/
+                }
+
+								console.log('setCustomPickupDiscount');
+                updateCartWidgetDelivery();
+            }
+        });
+    }
+
+    function updateCartWidget(data) {
+      console.log('updateCartWidget');
+        var $amount = $('[data-summary-amount]');
+        var $sum = $('[data-summary-sum]');
+        var $total = $('[data-summary-total]');
+      console.log('updateCartWidget total = ');
+      console.log($total);
+      console.log(data['total']);
+
+        if (data['cart'] && data['cart']['amount']) {
+            $amount.text(data['cart']['amount']).data('summaryAmount', data['cart']['amount']);
         }
+        if (data['cart'] && data['cart']['sum']) {
+            $sum.text(data['cart']['sum']).data('summarySum', data['cart']['sum']);
+        }
+        if (data['total'] && data['total']['actual']) {
+          console.log('updateCartWidget result');
+            $total.text(data['total']['actual']).data('summaryTotal', data['total']['actual']);
+        }
+    }
+
+    function updateCartWidgetDiscount(data, status, reason) {
+        // Промокод в приоритете
+        reason = store.discount.promocode || store.discount.pickup;
+
+        var $discount = $('.cart-summary__row.is-discount');
+
+        var $discountValue = $('[data-summary-discount]', $discount);
+        var $discountReason = $('.js-discount-reason', $discount);
+
+        $discount.toggleClass('hidden', !status);
+
+        if (status) {
+            $discountReason.text(
+              store.discount.promocode
+                ? dict.promocodeDiscount
+                : store.discount.pickup
+                    ? dict.pickupDiscount
+                    : ''
+            );
+
+            data['price_pure'] && $discountValue.text(data['price_pure']).data('summaryDiscount', data['price_pure']);
+        }
+    }
+
+    function updateCartWidgetDelivery(status, price) {
+        var isPickup = store.deliveryType === 'pickup';
+
+        var $delivery = $('.cart-summary__row.is-delivery');
+        var $deliveryValue = $('.value', $delivery);
+
+        $delivery.toggleClass('hidden', isPickup);
+
+        $deliveryValue.html(status && price ? price : dict.noDeliveryPrice);
+        $deliveryValue.toggleClass('g-blue-dark', !(status && price));
+
+        console.log('-updateCartWidgetDelivery-');
+        console.log(status);
+        console.log(price);
+        //custom add set new order delivery price
+        $.ajax({
+          url: '/udata/emarket/order_delivery_price/'+price+'/.json',
+          dataType: 'json',
+          success: function(response) {
+          	console.log('order_delivery_price');
+          	console.log(response);
+          	updateCartWidget(response);
+          }
+        });
+        //\custom add set new order delivery price
+    }
+
+    function subscribeOnCartUpdate() {
+        $.subscribe(function(e) {
+            if (e.type === 'cart-discount-update' && e.payload) {
+                if (e.reason && typeof store.discount[e.reason] !== 'undefined') {
+                    store.discount[e.reason] = e.status;
+                }
+                updateCartWidgetDiscount(e.payload, e.status);
+            }
+            if (e.type === 'cart-table-update' && e.payload) {
+                updateCartWidget(e.payload);
+            }
+        });
+    }
+
+    //custom add
+    function stringToBoolean(param_value){
+        switch(param_value){
+            case "true": case "yes": case "1": return true;
+            case "false": case "no": case "0": case null: return false;
+            default: return Boolean(param_value);
+        }
+    }
+
+    function subscribeOnDeliveryUpdate() {
+        $.subscribe(function(e) {
+            if (e.type === 'cart-address-for-delivery' && typeof e.allow !== 'undefined') {
+            	console.log('subscribeOnDeliveryUpdate - cart-address-for-delivery');
+                if (e.allow) {
+                    var response = e.payload;
+
+                    if (!response)
+                        return;
+
+                    if (typeof response.price === 'undefined' || response.price === null || response.price < 0)
+                        return;
+
+                    store.deliveryPrice =
+                      (response.price === 0)
+                        ? 'бесплатно'
+                        : response.price + ' ₽';
+
+										// Выводим сообщения под товарами
+                    if (!!response['cart_notice']) {
+                        $.dispatch({
+                            type: 'cart-notice-show',
+                            message: response['cart_notice']
+                        });
+                    }
+
+                    // custom add вывод информации об express доставке
+                    console.log('express');
+                    console.log(response);
+                    var $selectorInner = $('.cart-checkout-datetime__time-inner');
+                    var $day_is_selected = ($('.cart-checkout-datetime .js-datePicker .datepicker--cell-day.-selected-').length > 0) ? true : false;
+
+                		if(!$day_is_selected){
+	                    if ((stringToBoolean(response.deliveryExpress) === true && response.deliveryExpressPrice > 0)) {
+	                    	console.log('express yes');
+
+	                    	$selectorInner.html('');
+												//\ custom add clear time list
+										  	// custom add innsert time period item
+												var period_time_item_TODEL = '<div class="express_delivery_wrap"><span class="express_delivery_notice_1">Доставим ваш заказ за час</span><label class="express_delivery_input">'+
+										                                '<input class="js-pure express_delivery" type="radio" name="time" value="express доставка" data-required="true"  />'+
+										                                '<span><i>EXPRESS</i> доставка <span class="express_delivery_price">+'+ response.deliveryExpressPrice +'Р</span></span>'+
+										                            '</label><span class="express_delivery_notice_2">*Доступно только для физических лиц</span></div>';
+												var period_time_item = '<div class="express_delivery_wrap" data-mark_date="no"><label class="express_delivery_input">'+
+										                                '<input class="js-pure express_delivery" type="radio" name="time" value="express доставка" data-required="true"  />'+
+										                                '<span>Доставка в течение часа</span>'+
+										                            '</label><span class="express_delivery_notice_2">*Доступно только для физических лиц <br/>**Стоимость услуги <span class="express_delivery_price">'+ response.deliveryExpressPrice +' Р</span></span></div>';
+										    $selectorInner.append(period_time_item);
+										    //$('.datepicker--cell-day.-current-').addClass('-selected-');
+                        var calendar_current_day = $('.datepicker--cell-day.-current-');
+                        console.log('calendar trigger click current');
+
+                        if(calendar_current_day.length > 0) {
+
+                            console.log('curr_day_click');
+                          calendar_current_day.trigger('click');
+
+                        }
+                        //curr_form.find('.datepicker--cell-day.-current-').trigger('click');
+
+
+										    $('.cart-checkout-datetime__time ').removeClass('hidden');
+	                    	$('.cart-checkout-datetime__notice').addClass('hidden');
+	                    	//$('.js-datePicker > input').val('');
+	                    	//$('.js_express_delivery .express_img').removeClass('hidden');
+	                  		//$('.js_express_delivery .express_img_active').addClass('hidden');
+
+												//\ custom add innsert time period item
+
+										    //var $input = this._$selectorInner.find('.express_delivery');
+
+	                    	/*$('.js-datePicker').addClass('delivery_express');
+	                    	$('.cart-checkout-express__notice ').removeClass('hidden');
+	                    	$('.cart-checkout-datetime__notice').addClass('hidden');
+	                    	$('.js-datePicker > input').val('');
+	                    	$('.js_express_delivery .express_img').removeClass('hidden');
+	                  		$('.js_express_delivery .express_img_active').addClass('hidden');
+	                    	$('.cart-checkout-datetime__time').addClass('hidden');*/
+	                    	//updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+
+
+	                    	/*$('.js_express_delivery').on('click',function(){
+	                    		$('.js-datePicker > input').val('express доставка');
+	                    		$('.express_img',$(this)).addClass('hidden');
+	                    		$('.express_img_active',$(this)).removeClass('hidden');
+	                    		//updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+	                    		return false;
+	                    	});*/
+
+	                    	$selectorInner.on('change', '.js-pure', function(){
+										    	console.log('time_input_change');
+										    	if($(this).hasClass('express_delivery')){
+										    		cartFunctions.updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+										    	}else{
+										    		cartFunctions.updateCartWidgetDelivery(true, (response.price === 0) ? 'бесплатно' : response.price);
+										    	}
+										    });
+
+	                    }else{
+	                    	$selectorInner.html('');
+	                    	$('.cart-checkout-datetime__time ').addClass('hidden');
+	                    	$('.cart-checkout-datetime__notice').removeClass('hidden');
+
+
+	                    	/*$('.js-datePicker').removeClass('delivery_express');
+	                    	$('.cart-checkout-express__notice ').addClass('hidden');
+	                    	//$('.cart-checkout-datetime__notice').removeClass('hidden');*/
+	                    	updateCartWidgetDelivery(true, store.deliveryPrice);
+	                    }
+                    }
+                    //\ custom add вывод информации об express доставке
+
+                    updateCartWidgetDelivery(true, false);
+                    //updateCartWidgetDelivery(true, store.deliveryPrice);
+                }
+                else {
+                		console.log('subscribeOnDeliveryUpdate - not e.allow');
+                    updateCartWidgetDelivery(false, undefined);
+                }
+            }
+            if (e.type === 'cart-delivery-update') {
+            	console.log('subscribeOnDeliveryUpdate - cart-delivery-update');
+                var price =
+                  typeof e.price === 'number'
+                    ? (e.price === 0)
+                        ? 'бесплатно'
+                        : e.price + ' ₽'
+                    : null;
+
+                // Выводим сообщения под товарами
+                //console.log(e);
+                var response = e.payload;
+                if (!!response['cart_notice']) {
+                    $.dispatch({
+                        type: 'cart-notice-show',
+                        message: response['cart_notice']
+                    });
+                }else{
+                	// Скрываем сообщения под товарами
+					        $.dispatch({
+					            type: 'cart-notice-hide'
+					        });
+                }
+
+                updateCartWidgetDelivery(!!price, price);
+            }
+        });
+    }
+
+    function get19BottlesAmount(url) {
+        return new Promise(function(resolve, reject) {
+            $.ajax({
+                url: url || 'https://www.vodovoz-spb.ru/udata/emarket/water19lAmountInCart.json',
+                dataType: 'json',
+                async: false,
+                success: function(response) {
+                    resolve(response);
+                },
+                error: function(error) {
+                    reject(error);
+                }
+            });
+        });
+
+        // How to use:
+        // cartFunctions
+        //     .get19BottlesAmount()
+        //     .then(function(response) {
+        //         // Передаем результат дальше на выполнение после асинхронного запроса
+        //         yourHandler(response.result);
+        //     })
+        //     .catch(function(error) {
+        //         console.warn(error);
+        //     });
+    }
+
+    return {
+        init: function() {
+            var $preloader = $('.cart-preloader');
+
+            $(document).ajaxSend(function() {
+            	console.log('$(document).ajaxSend');
+                $preloader.addClass('is-shown');
+            });
+            $(document).ajaxComplete(function() {
+            	console.log('$(document).ajaxComplete before check');
+            	console.log(!!$('#eone_form'));
+            	console.log($('#eone_form').data('cart_ordering'));
+            	if(!!$('#eone_form') && $('#eone_form').data('cart_ordering') != 1){
+            		console.log('$(document).ajaxComplete');
+            		$preloader.removeClass('is-shown');
+            	}
+
+            });
+
+            /*
+            $('body').on('click.clearCart', '.js-clear-cart', function(e) {
+                            e.preventDefault();
+                            $.dispatch({
+                                type: 'cart-clear'
+                            });
+                        });*/
+
+
+            emailAndFormConfirm();
+            deliveryOrPickup();
+            console.log('cart_init - pre subscribeOnCartUpdate');
+            subscribeOnCartUpdate();
+            subscribeOnDeliveryUpdate();
+
+        },
+        get19BottlesAmount: get19BottlesAmount,
+        updateCartWidgetDelivery: updateCartWidgetDelivery // uh add custom
     };
 
 })(window);
@@ -30250,7 +31532,71 @@ var YandexMaps = (function(window, undefined) {
                         collection;
                         //suggestView = new ymaps.SuggestView('suggest'); // custom add search input
 
+
+
+
                     map.element = $map;
+
+                    /*custom add polygon*/
+                    //console.log('test polygon');
+										if($map.hasClass('polygon_map') && !!polygon_list){
+											console.log('test polygon add');
+											for(var i in polygon_list) {
+												var polygon_info = polygon_list[i];
+
+												if(!!polygon_info.name && !!polygon_info.color && !!polygon_info.coordinates){
+
+												  var options = {
+                            // Опции.
+                            // Цвет заливки (зеленый)
+                            fillColor: polygon_info.color,
+                            // Цвет границ (синий)
+                            strokeColor: polygon_info.color,
+                            // Прозрачность (полупрозрачная заливка)
+                            opacity: 0.6,
+                            // Ширина линии
+                            strokeWidth: 5,
+                            // Стиль линии
+                            strokeStyle: 'solid',
+                            interactivityModel: 'default#silent'
+                          };
+												  if(!!polygon_info.bg_img && polygon_info.bg_img != 'none'){
+                            options = {
+                              // Опции.
+                              // Цвет заливки (зеленый)
+                              fillColor: polygon_info.color,
+                              // картинка заливки
+                              fillImageHref: polygon_info.bg_img,
+                              // Type of background fill.
+                              fillMethod: 'tile',
+                              // Цвет границ (синий)
+                              strokeColor: polygon_info.color,
+                              // Прозрачность (полупрозрачная заливка)
+                              opacity: 0.6,
+                              // Ширина линии
+                              strokeWidth: 5,
+                              // Стиль линии
+                              strokeStyle: 'solid',
+                              interactivityModel: 'default#silent'
+                            };
+                          }
+
+
+													var myPolygon = new ymaps.Polygon([
+													    // Координаты вершин внешней границы многоугольника.
+													    polygon_info.coordinates
+
+													], {
+													    //Свойства
+													    hintContent: polygon_info.name
+													}, options);
+
+													map.geoObjects.add(myPolygon);
+													console.log('add - ' + polygon_info.name);
+												}
+											}
+										}
+                    /*\custom add polygon*/
 
                     // Drag behavior
                     if (helpers.isTouchDevice()) {
@@ -30273,15 +31619,20 @@ var YandexMaps = (function(window, undefined) {
                      * and suggests on address
                      */
                     $('body')
-                        .on('keyup', '.js-delivery-address', function() {
+                        .on('keyup', '.js-delivery-address', function(e) {
+                          if(e.key!=="Enter"){
+                          //console.log('keyup - .js-delivery-address');
                             var $this = $(this);
 
                             $this.data('isClosed', suggestAddress.state.get('panelClosed'));
                             $this.data('isSelected', false);
+                          }
                         })
                         .on('change', '.js-delivery-address', function() {
+                          //console.log('change - .js-delivery-address');
                             var $this = $(this);
-
+                          //console.log($this);
+                          //console.log($this.data('isSelected'));
                             setTimeout(function() {
                                 if (!$this.data('isSelected'))
                                     formNotifications.showErrorLabel.call($addressField, 'Выберите адрес из списка', 0);
@@ -30297,8 +31648,49 @@ var YandexMaps = (function(window, undefined) {
                                 kind: 'house' // custom add
                             }
 
-                        }),
-                        suggestAddress = new ymaps.SuggestView($addressField[0]);
+                        });
+                        /*suggestAddress = new ymaps.SuggestView($addressField[0]);*/
+												var cities = [
+											        "Санкт-Петербург",
+											        "Ленинградская область"
+										        ];
+								        var suggestAddress = new ymaps.SuggestView($addressField[0], {
+								            /*provider: {
+								                suggest: function (request, options) {
+								                   return (suggestAddress.state.get('open') ? ymaps.suggest(request) : ymaps.vow.resolve([])).then(function (res){
+																			var res_tmp = [];
+
+														          if (res.length > 0) {
+														                  $.map(res,function( item, i ) {
+														                  	var item_value = item.value;
+
+																		        		var $city_bounded_result = false;
+																		        		$.each(cities,function(city_index,city_name){
+																		        			if(item_value.indexOf(city_name) !== -1){
+																		        				$city_bounded_result = true;
+																		        			}
+																		        		});
+
+																		        		if($city_bounded_result == true){
+																		        			res_tmp.push(item);
+																		        		}
+
+
+														                })
+														          }else{
+														          	res_tmp = res;
+														          }
+
+													            suggestAddress.events.fire('requestsuccess', {
+													              target: suggestAddress,
+													            });
+													            return res_tmp;
+														        })
+								                }
+								            }*/
+								        });
+
+								        suggestAddress.state.set('open', true);
 
                     searchControl.events.add('resultselect', function(e) {
                         searchControl
@@ -30309,11 +31701,15 @@ var YandexMaps = (function(window, undefined) {
                     });
 
                     suggestAddress.events.add('select', function(e) {
+                      console.log('suggestAddress select');
+
                         $addressField.data('isSelected', true);
+
+                      console.log($addressField.data('isSelected'));
                         formNotifications.hideErrorLabel.call($addressField);
 
                         var address = e.originalEvent.item.value;
-
+console.log(address);
                         ymaps
                             .geocode(address, { results: 1 })
                             .then(function(res) {
@@ -30323,7 +31719,13 @@ var YandexMaps = (function(window, undefined) {
 
                     });
 
+
+
                     map.controls.add(searchControl);
+                  if($map.hasClass('polygon_map')){
+                    //console.log('remove search for polygon map');
+                    map.controls.remove(searchControl);
+                  }
 
                     // Click on map
                     map.events.add('click', function(e) {
@@ -30343,6 +31745,75 @@ var YandexMaps = (function(window, undefined) {
 
                     if (currentAddress !== '')
                         _geoQuery.call(map, currentAddress);
+
+
+
+
+                    //custom add
+                    // вставка адреса
+                    //var $addressField = $('.js-delivery-address'),
+                    var delivery_address = $('.js-delivery-address').data('address');
+                    if (!!delivery_address && delivery_address !== ''){
+
+
+					        		console.log('Init user address ' + delivery_address);
+
+					        		ymaps
+                        .geocode(delivery_address, { results: 1 })
+                        .then(function(res) {
+                            var object = res.geoObjects.get(0),
+                                coordinates = object.geometry.getCoordinates();
+
+console.log('Init user address _handleSearch ' + delivery_address);
+$addressField.closest('.b-form_box').addClass('transition').addClass('active');
+														_handleSearch.call(map, object, $addressField, true);
+                            //_userPlaceMark.call(map, coordinates, manual);
+                        });
+
+					        		//_geoQuery.call(map, delivery_address);
+                    }
+		                // вставка информации в корзину
+										/*if($('.js-cart_status_fail').length > 0){
+											console.log('reset cart');
+
+					        		var lat = $('.js-delivery-address-lat').val(),
+					        				lon = $('.js-delivery-address-lon').val(),
+
+					        				$addressField = $('.js-delivery-address'),
+					        				delivery_address = $addressField.data('address');
+
+			        				console.log(delivery_address);
+			        				console.log($addressField);
+
+			        				console.log($addressField.val());
+
+			        				//if (ymaps !== 'undefined' && !!ymaps) {
+
+
+
+			        				var address = delivery_address;
+
+											console.log(map);
+		                  ymaps
+		                      .geocode(address, { results: 1 })
+		                      .then(function(res) {
+		                          var object = res.geoObjects.get(0);
+		                          console.log('geocode');
+		                          console.log(object);
+		                          console.log($addressField);
+		                          $addressField.data('isSelected',true);
+		                          _handleSearch.call(map, object, $addressField, false);
+		                          //_apiDeliveryInfo([lat , lon]);
+		                      });
+			        				//delivery_address_field.val(delivery_address);
+
+			        				console.log($addressField.val());
+
+
+				        			//	})
+											//}
+										}*/
+		                //\custom add
                 });
 
 
@@ -30350,18 +31821,31 @@ var YandexMaps = (function(window, undefined) {
                 function _handleSearch(res, input, isSuggest) {
                     var map = this,
                         address, fullAddress, coordinates,
-                        props = res['properties'];
-										
-										console.log('_handleSearch');
-										console.log(res);
-										console.log(" ");
-														
-                    if (props.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
-                        address = props.get('name');
+                        props = res['properties'],
+												addr_components = props.get('metaDataProperty.GeocoderMetaData.Address.Components'),
+												is_house_kind = false;
+
+											console.log('_handleSearch');
+											console.log(res);
+
+
+											for(var i in addr_components) {
+												//console.log(i, addr_components[i]);
+												//console.log(addr_components[i].kind);
+												if(addr_components[i].kind === 'house'){
+													is_house_kind = true;
+												}
+											}
+											//console.log('is_house_kind-' + is_house_kind);
+                    	if (is_house_kind) {
+												console.log('is_house_kind process');
+                    		//if (props.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
+                        //address = props.get('name');
+                        address = props.get('text');
                         fullAddress = props.get('text');
                         coordinates = res.geometry.getCoordinates();
-                        
-                        var components = props.get('metaDataProperty.GeocoderMetaData.Address.Components');	
+console.log(coordinates);
+                        var components = props.get('metaDataProperty.GeocoderMetaData.Address.Components');
                         if(!!components){
                         	var form = $(input).closest('form');
                         	var kinder = components.reduce(function(prev, curr) {
@@ -30371,13 +31855,14 @@ var YandexMaps = (function(window, undefined) {
 														form.find('.js-'+kind).val(name);
 													  return ;
 													}, {});
-													
+
                         }
 
                         input
                             .data('isComplete', true)
 
                         if (!isSuggest) {
+												console.log('_handleSearch !isSuggest');
                             input
                                 .val(address)
                                 .trigger('change').trigger('refresh.validate')
@@ -30386,38 +31871,54 @@ var YandexMaps = (function(window, undefined) {
                             formNotifications.hideErrorLabel.call(input);
                         }
                         else {
+												    // для калькулятора
+                            if(input.closest('.calculate-page').length > 0 ){
+                              input.closest('.b-checkout_map_address').removeClass('hidden');
+                              $('.map_legend').addClass('hidden');
+                            }
+
                             input.trigger('emit.action');
                         }
 
+// console.log(map);
+// console.log(fullAddress);
+// console.log('before-1   _userPlaceMark');
                         $('.js-delivery-address-full', map.element.closest('form')).val(fullAddress);
+                        //console.log('before0   _userPlaceMark');
                         $('.js-delivery-address-text', map.element.closest('form')).text(address);
-
+//console.log('before   _userPlaceMark');
                         _userPlaceMark.call(map, coordinates);
+//console.log('after _userPlaceMark');
+                        // custom add
+                        $('.b-checkout_address_main_map.js-pocket-box').css('max-height','');
+						            //\ custom add
+
                         _apiDeliveryInfo(coordinates);
-                    }
-                    else {
-                        $('.js-delivery-address-full', map.element.closest('form')).val('');
-                        $('.js-delivery-address-text', map.element.closest('form')).html('<span style="color: #c00 !important;">Укажите адрес точнее</span>');
+                        console.log('after _apiDeliveryInfo');
+	                    }
+	                    else {
+	                        $('.js-delivery-address-full', map.element.closest('form')).val('');
+	                        $('.js-delivery-address-text', map.element.closest('form')).html('<span style="color: #c00 !important;">Укажите адрес точнее</span>');
 
-                        input
-                            .data('isComplete', false);
+	                        input
+	                            .data('isComplete', false);
 
-                        if (!isSuggest) {
-                            input
-                                .val('')
-                                .trigger('change').trigger('refresh.validate')
-                                .closest('.b-checkout_map_address').removeClass('hidden');
+	                        if (!isSuggest) {
+	                            input
+	                                .val('')
+	                                .trigger('change').trigger('refresh.validate')
+	                                .closest('.b-checkout_map_address').removeClass('hidden');
 
-                            $('.js-delivery-price-wrap').hide();
-                        }
-                        else {
-                            input.trigger('emit.action');
-                        }
+	                            $('.js-delivery-price-wrap').hide();
+	                        }
+	                        else {
+	                            input.trigger('emit.action');
+	                        }
 
-                        formNotifications.showErrorLabel.call(input, 'Укажите адрес точнее', 0);
+	                        formNotifications.showErrorLabel.call(input, 'Укажите адрес точнее', 0);
 
-                        $('.js-calculate-info').hide();
-                    }
+	                        $('.js-calculate-info').hide();
+	                    }
                 }
 
                 function _userPlaceMark(coordinates, manual) {
@@ -30456,33 +31957,44 @@ var YandexMaps = (function(window, undefined) {
 
 
                                 $address = $('.js-delivery-address');
-														
+
 														console.log('_getAddress');
 														console.log('manual-' + manual);
 														console.log(object);
 														console.log(" ");
-														
+
                             if (manual) {
                                 $address.data('isSelected', true);
 
-                                if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
+																var addr_components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components'),
+																	is_house_kind = false;
+
+
+																for(var i in addr_components) {
+																	if(addr_components[i].kind === 'house'){
+																		is_house_kind = true;
+																	}
+																}
+																if (is_house_kind) {
+
+                                //if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
                                     $address.data('isComplete', true);
                                     formNotifications.hideErrorLabel.call($address);
 
                                     $('.js-delivery-address-full', $address.closest('form')).val(fullAddress);
                                     $('.js-delivery-address-text', $address.closest('form')).text(address);
-                                    
-                                    var components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components');	
+
+                                    var components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components');
 						                        if(!!components){
-						                        	
+
 						                        	var kinder = components.reduce(function(prev, curr) {
 						                        		var kind = curr.kind,
 						                                name = curr.name;;
-						
+
 																				$('.js-'+kind).val(name);
 																			  return ;
 																			}, {});
-																			
+
 						                        }
                                 }
                                 else {
@@ -30520,7 +32032,10 @@ var YandexMaps = (function(window, undefined) {
                             var object = res.geoObjects.get(0),
                                 coordinates = object.geometry.getCoordinates();
 
-                            _userPlaceMark.call(map, coordinates);
+														console.log('_geoQuery object');
+														console.log(object);
+                            //_userPlaceMark.call(map, coordinates);
+                            _userPlaceMark.call(map, coordinates, manual);
                         });
                 }
 
@@ -30534,7 +32049,7 @@ var YandexMaps = (function(window, undefined) {
                 }
 
                 function _apiDeliveryInfo(coordinates) {
-                    // console.log('_apiDeliveryInfo');
+                    console.log('_apiDeliveryInfo');
                     ymaps
                       .geocode(coordinates)
                       .then(function(res) {
@@ -30545,7 +32060,18 @@ var YandexMaps = (function(window, undefined) {
                           // console.log(object.properties.get('metaDataProperty.GeocoderMetaData.kind'));
 
                           if (object) {
-                              if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
+
+														  var addr_components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components'),
+															  is_house_kind = false;
+
+
+														  for(var i in addr_components) {
+															  if(addr_components[i].kind === 'house'){
+																  is_house_kind = true;
+															  }
+														  }
+														  if (is_house_kind) {
+                              //if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
                                   // проверка доступности доставки по адресу с домом
                                   var lat,
                                       lon;
@@ -30569,14 +32095,49 @@ var YandexMaps = (function(window, undefined) {
                                           // data: data,
                                           success: function(response) {
                                               if (response.result === 'no') {
-                                                  $('.js-delivery-address-text').html('<span style="color: #c00!important;">Ошибка определения доставки по данному адресу</span>');
-                                                  $('.js-delivery-address').val('');
+                                              		$.dispatch({
+                                                      type: 'cart-address-for-delivery',
+                                                      payload: response,
+                                                      allow: false
+                                                  });
+
+                                                  $address = $('.js-delivery-address');
+
+                                                  $('.js-delivery-address-text').html('<span style="color: #FC372A !important;">Ошибка определения доставки по данному адресу</span>');
+                                                  //$('.js-delivery-address').val('');
+                                                  $address.val('');
                                                   $('.js-delivery-price-wrap').hide();
+
+																									//$addressInput.val('');
+																									$address.val('');
+                                                  //formNotifications.showErrorLabel.call($addressInput, 'Ошибка определения доставки по данному адресу', 0);
+                                                  formNotifications.showErrorLabel.call( $address, 'Ошибка определения доставки по данному адресу', 0);
 
                                                   // для калькулятора
                                                   $('.js-calculate-info').hide();
                                               }
                                               else {
+
+                                              		// clear calendar selected day, error,  time period
+                                              		console.log('clear calendar and time period');
+                                              		var $selectorInner = $('.cart-checkout-datetime__time-inner');
+                                              		$selectorInner.html('');
+															                    $('.cart-checkout-datetime .js-datePicker .datepicker--cell-day.-selected-').removeClass('-selected-');
+
+																							    $('.cart-checkout-datetime__time ').addClass('hidden');
+														                    	$('.cart-checkout-datetime__notice').removeClass('hidden');
+														                    	$.dispatch({
+																			                id: 'delivery-time',
+																			                type: 'error-message-hide',
+																			            });
+                                          				//\ clear calendar and time period
+
+                                              		$.dispatch({
+                                                      type: 'cart-address-for-delivery',
+                                                      payload: response,
+                                                      allow: true
+                                                  });
+
                                                   if (typeof response.price !== 'undefined' && (response.price === 0 || response.price > 0)) {
                                                       var delivery_price = (response.price === 0) ? 'бесплатно' : response.price;
                                                       $('.js-delivery-price-text').text(delivery_price);
@@ -30711,8 +32272,13 @@ var YandexMaps = (function(window, undefined) {
 
                                                       // определение ближайшего времени доставки
                                                       if(typeof response.period.item !== 'undefined') {
-                                                          var item = response.period.item[0],
-                                                            from = item.from,
+                                                      		var item;
+                                                      		if(!!response.period.item[0]){
+                                                      			item = response.period.item[0];
+                                                      		}else{
+                                                      			item = response.period.item[1];
+                                                      		}
+                                                          var from = item.from,
                                                             to = item.to,
                                                             period = from + ((from.length < 3) ? ':00' : '') + ' – '+ to + ((to.length < 3) ? ':00' : '');
 
@@ -30727,31 +32293,33 @@ var YandexMaps = (function(window, undefined) {
                                                       // console.log(response.min19lAmountForFreeDelivery);
 
                                                       if (typeof response.min19lAmountForFreeDelivery !== 'undefined') {
-                                                          $('.js-min-19l-amount-for-free-delivery').html(': ' + response.min19lAmountForFreeDelivery + 'шт.');
+                                                          $('.js-min-19l-amount-for-free-delivery').html(response.min19lAmountForFreeDelivery);
                                                       }
 
                                                       $('.js-delivery-price_no_cart-text').text(delivery_price_no_cart);
                                                       $('.js-calculate-info').show();
                                                   }
-                                                  
-                                                  
-                                                  
+
+
+
                                                   // сразу попробовать выбрать дату доставки
                                                   var curr_form = $('.js-tabs-page.opened form');
                                                   if(curr_form.length > 0){
                                                   	if(curr_form.find('.datepicker--cell-day.-current-').length > 0){
-                                                  		curr_form.find('.datepicker--cell-day.-current-').trigger('click');  
+
+                                                  		console.log('curr_day_click');
+                                                  		curr_form.find('.datepicker--cell-day.-current-').trigger('click');
                                                   		curr_form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
-											                            		curr_form.find('#checkout-time').trigger('change');           
+											                            		curr_form.find('#checkout-time').trigger('change');
                                                   	}
                                                   }
-                                                  //form.find('.datepicker--cell-day.-current-').trigger('click');                            
+                                                  //form.find('.datepicker--cell-day.-current-').trigger('click');
 											                            // if(form.find('#checkout-time select option[text = "Выберите другую дату"]').length > 0 ){
 											                            	// form.find('.datepicker--cell-day.-current-').next().trigger('click');
 											                            // }
-											                            
+
 											                            //form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
-											                            //form.find('#checkout-time').trigger('change');  
+											                            //form.find('#checkout-time').trigger('change');
 
                                               }
                                           }
@@ -30761,7 +32329,7 @@ var YandexMaps = (function(window, undefined) {
                                   }
                               } else {
                                   // в адресе нет дома, нужна более точное указание
-                                  $('.js-delivery-address-text').html('<span style="color: #c00!important;">Укажите адрес точнее</span>');
+                                  $('.js-delivery-address-text').html('<span style="color: #FC372A !important;">Укажите адрес точнее</span>');
                                   $('.js-delivery-address').val('');
                                   $('.js-delivery-price-wrap').hide();
 
@@ -30772,6 +32340,8 @@ var YandexMaps = (function(window, undefined) {
                       });
                 }
                 //\custom add
+
+
 
             }); //ymaps.ready end scope
 
@@ -30925,7 +32495,7 @@ var YandexMaps = (function(window, undefined) {
 
         // custom add
         $('#pickup_delivery_id').val(id);
-        
+
         /*var coordinates =
             object.geometry.coordinates;
 
@@ -31430,6 +33000,25 @@ var helpers = (function(window, undefined) {
 
     };
 
+    function checkBool(value){
+        switch(value){
+            case "true":
+            case "yes":
+            case "1":
+            case true:
+                return true;
+            case "false":
+            case "no":
+            case "0":
+            case null:
+            case false:
+            case undefined:
+                return false;
+            default:
+                return Boolean(value);
+        }
+    }
+
     return {
 
         // Variables
@@ -31453,7 +33042,8 @@ var helpers = (function(window, undefined) {
         pixelsRatio: pixelsRatio,
         randomString: randomString,
         screen: screen,
-        isTouchDevice: isTouchDevice
+        isTouchDevice: isTouchDevice,
+        checkBool: checkBool
 
     };
 
@@ -31987,3 +33577,1549 @@ var siteResponsive = (function(window, undefined) {
     };
 
 })(window);
+
+var _handlers = [];
+
+var dispatch = function(event) {
+  for (var i = 0; i <= _handlers.length - 1; i++) {
+    _handlers[i](event);
+  }
+}
+var subscribe = function(handler) {
+  _handlers.push(handler);
+}
+var unsubscribe = function(handler) {
+  for (var i = 0; i <= _handlers.length - 1; i++) {
+    if (_handlers[i] === handler) {
+      _handlers.splice(i--, 1);
+    }
+  }
+}
+
+$.dispatch = dispatch;
+$.subscribe = subscribe;
+$.unsubscribe = unsubscribe;
+
+function SpinnerInput() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+
+SpinnerInput.prototype = Object.create(HTMLElement.prototype);
+SpinnerInput.prototype.constructor = SpinnerInput;
+Object.setPrototypeOf(SpinnerInput, HTMLElement);
+
+
+
+
+
+
+
+
+
+SpinnerInput.prototype.connectedCallback = function() {
+    // var self = this;
+
+
+
+
+
+
+
+
+
+
+    this.checkMax.bind(this);
+    this.checkMin.bind(this);
+
+
+
+    this.handleSuffix.bind(this);
+
+    this._$buttonMinus = $(this).find('.spinner__btn_minus');
+    this._$buttonPlus = $(this).find('.spinner__btn_plus');
+
+    this._$input = $(this).find('input');
+
+    if (!(this._$buttonMinus.length && this._$buttonPlus.length) || !this._$input.length)
+        return;
+
+    this._step = Number($(this).data('step') || 1);
+
+    this._min = Number($(this).data('min') || this._step);
+    this._max = $(this).data('max');
+
+    this._value = Number(this._$input.val());
+
+    this._checkMaxHandler = null;
+    this._checkMinHandler = null;
+
+    this._$buttonMinus.on('click.spinnerInput', this.handleClickMinus.bind(this));
+    this._$buttonPlus.on('click.spinnerInput', this.handleClickPlus.bind(this));
+
+    this._$input.on('keyup.spinnerKeyup', this.handleKeyUp.bind(this))
+    this._$input.on('blur.spinnerBlur', this.handleBlur.bind(this));
+
+    this._$suffix = $(this).find('[data-suffix]');
+    this.handleSuffix();
+};
+
+SpinnerInput.prototype.disconnectedCallback = function() {
+    this._$buttonMinus.off('click.spinnerInput');
+    this._$buttonPlus.off('click.spinnerInput');
+
+    this._$input.off('keyup.spinnerKeyup')
+    this._$input.off('blur.spinnerBlur');
+};
+
+SpinnerInput.prototype.handleKeyUp = function() {
+    if (this._$input.val().match(/^\D+$/)) {
+        this._$input.val(this._step || 1);
+        this._value = this._step || 1;
+    }
+    else if (this._$input.val().match(/^\d+$/)) {
+        this._value = Number(this._$input.val());
+    }
+
+    this.handleSuffix();
+};
+
+SpinnerInput.prototype.handleBlur = function() {
+    if (this._$input.val() === '' || this._$input.val() === 0)
+        this._$input.val(this._step || 1);
+
+    var value = this.checkMax(),
+        result = value.isInteger() ? value : value.toFixed(2);
+
+    this._$input.val(result);
+    this._value = value;
+
+    this.handleSuffix();
+};
+
+SpinnerInput.prototype.handleClickMinus = function(e) {
+    e && e.preventDefault();
+
+    this._value =
+        (this._value * 100 < (this._step * 100 + this._min * 100)) ?
+            this._min * 100 :
+            this._value * 100 - this._step * 100;
+
+    this._value = this._value / 100;
+
+    this._$input
+        .val(this._value)
+        .trigger('blur')
+        .trigger('change');
+
+    this.handleSuffix();
+};
+
+SpinnerInput.prototype.handleClickPlus = function(e) {
+    e && e.preventDefault();
+
+    this._value = this._value * 100 + this._step * 100;
+    this._value = this._value / 100;
+
+    this._$input
+        .val(this._value)
+        .trigger('blur')
+        .trigger('change');
+
+    this.handleSuffix();
+};
+
+SpinnerInput.prototype.handleSuffix = function() {
+    if (!this._$suffix.length)
+        return;
+
+    var suffixArray = this._$suffix.data('suffix');
+
+    this._$suffix.text(
+        helpers.getNumEnding(this._value, suffixArray)
+    );
+};
+
+SpinnerInput.prototype.checkMax = function(amount) {
+    amount = amount || this._value;
+
+    var checkMax = this._max && Number(amount) > this._max;
+
+    if (!!this._checkMaxHandler)
+        this._checkMaxHandler.call(this, checkMax);
+
+    return checkMax ? this._max : Number(amount);
+}
+
+SpinnerInput.prototype.checkMin = function(amount) {
+    amount = amount || this._value;
+
+    var checkMin = this._min && Number(amount) < this._min;
+
+    if (!!this._checkMinHandler)
+        this._checkMinHandler.call(this, checkMin);
+
+    return checkMin ? this._min : Number(amount);
+}
+
+customElements.define('spinner-input', SpinnerInput);
+function CartEmptyComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartEmptyComponent.prototype = Object.create(HTMLElement.prototype);
+CartEmptyComponent.prototype.constructor = CartEmptyComponent;
+Object.setPrototypeOf(CartEmptyComponent, HTMLElement);
+
+CartEmptyComponent.prototype.connectedCallback = function() {
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+    $.subscribe(this.handleDispatcher);
+};
+
+CartEmptyComponent.prototype.disconnectedCallback = function() {
+    $.unsubscribe(this.handleDispatcher);
+};
+
+CartEmptyComponent.prototype.handleDispatcher = function(e) {
+    var $self = $(this);
+    var $cart = $('.cart__columns');
+
+    if (e.type === 'cart-clear') {
+        $self
+            .hide()
+            .toggleClass('hidden', false)
+            .toggleClass('fade', true);
+
+        setTimeout(function() {
+            $self
+                .toggleClass('fade', false)
+                .slideDown({
+                    duration: 400,
+                    easing: 'easeOutQuart',
+                    complete: function() {}
+                });
+        }, 100);
+
+        $cart
+            .toggleClass('fade', true)
+            .slideUp({
+                duration: 400,
+                easing: 'easeOutQuart',
+                complete: function() {
+                    $cart.remove();
+                }
+            });
+
+        $('.js-clear-cart')
+            .toggleClass('hidden', true);
+    }
+};
+
+customElements.define('cart-empty', CartEmptyComponent);
+function CartTableComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartTableComponent.prototype = Object.create(HTMLElement.prototype);
+CartTableComponent.prototype.constructor = CartTableComponent;
+Object.setPrototypeOf(CartTableComponent, HTMLElement);
+
+CartTableComponent.prototype.connectedCallback = function() {
+		console.log('CartTableComponent.prototype.connectedCallback');
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+    this.handleAmount = this.handleAmount.bind(this);
+    this.handleRemove = this.handleRemove.bind(this);
+    this.handleItems = this.handleItems.bind(this);
+    this.handleItem = this.handleItem.bind(this);
+
+    var self = this;
+
+    /*
+    $(this).on('click.removeFromCart', '.cart-table-good__remove', function(e) {
+            e.preventDefault();
+            self.handleRemove($(this));
+        });
+        */
+
+
+
+    $(this).on('click.removeFromCart', '.cart-table-good__remove', function(e) {
+        e.preventDefault();
+        self.handleRemove($(this));
+    });
+    $(this).on('change.changeAmountInCart', '.cart-table-good spinner-input input', function(e) {
+    		console.log('change.changeAmountInCart');
+        e.preventDefault();
+        self.handleAmount($(this));
+    });
+
+    $.subscribe(this.handleDispatcher);
+};
+
+CartTableComponent.prototype.disconnectedCallback = function() {
+    $(this).off('click.removeFromCart');
+    $(this).off('click.changeAmountInCart');
+    $.unsubscribe(this.handleDispatcher);
+};
+
+CartTableComponent.prototype.handleRemove = function($btn) {
+    var $self = $(this);
+
+    var $good = $btn.closest('.cart-table-good'),
+
+        formData = $good.find('input, select, textarea').serializeObject(),
+        data = $.extend({ customAction: 'remove' }, $good.data(), formData);
+
+    $.ajax({
+        url: $btn.attr('href') || $btn.data('url') || window.location,
+        method: $(this).data('method') || 'post',
+        dataType: 'json',
+        data: data,
+        success: function(response) {
+            // пересчет стоимости доставки за выбранный адрес и время
+            console.log('recalc delivery cost on remove item');
+
+            var $datepicker = $('.cart-checkout-datetime .js-datePicker input'),
+                _date = $datepicker.val(),
+                url = '/udata/emarket/deliveryDateParam/${date}/.json',
+                apiUrl = url.replace('${date}', _date);
+
+            if(!!_date && _date != ''){
+              $.ajax({
+                url: apiUrl,
+                dataType: 'json',
+                success: function(response) {
+                  var selected_time = $('.cart-checkout-datetime__time-inner .js-pure:checked');
+                  console.log('selected_time: ' + selected_time);
+
+                  if(selected_time.length > 0){
+                    if($(selected_time).hasClass('express_delivery')){
+                      cartFunctions.updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+                    }else{
+                      cartFunctions.updateCartWidgetDelivery(true, (response.price === 0) ? 'бесплатно' : response.price);
+                    }
+                  }
+                }
+              });
+            }
+
+            $.dispatch({
+                type: 'cart-table-update',
+                payload: response,
+                status: response.status
+            });
+
+            if (response['delivery']) {
+                $.dispatch({
+                    type: 'cart-delivery-update',
+                    payload: response,
+                    price: (!!response['void:delivery-price']['actual']) ? response['void:delivery-price']['actual'] : false
+                });
+            }
+
+            var itemsLength = $self.find('.cart-table-good').length;
+
+            if (itemsLength > 1) {
+                $good
+                    .toggleClass('fade', true)
+                    .slideUp({
+                        duration: 400,
+                        easing: 'easeOutQuart',
+                        complete: function() {
+                            $good.remove();
+                        }
+                    });
+            }
+            else {
+                $.dispatch({
+                    type: 'cart-clear'
+                });
+            }
+        }
+    });
+
+};
+
+CartTableComponent.prototype.handleAmount = function($input) {
+    var $good = $input.closest('.cart-table-good'),
+
+        formData = $good.find('input, select, textarea').serializeObject(),
+        data = $.extend({ customAction: 'amount' }, $good.data(), formData);
+
+    $.ajax({
+        url: $input.data('url') + '?amount='+ $input.val()|| window.location,
+        method: $(this).data('method') || 'post',
+        dataType: 'json',
+        data: data,
+        success: function(response) {
+            // пересчет стоимости доставки за выбранный адрес и время
+            console.log('recalc delivery cost on change amount item');
+
+            var $datepicker = $('.cart-checkout-datetime .js-datePicker input'),
+                _date = $datepicker.val(),
+                url = '/udata/emarket/deliveryDateParam/${date}/.json',
+                apiUrl = url.replace('${date}', _date);
+
+            if(!!_date && _date != ''){
+              $.ajax({
+                url: apiUrl,
+                dataType: 'json',
+                success: function(response) {
+                  var selected_time = $('.cart-checkout-datetime__time-inner .js-pure:checked');
+                  console.log('selected_time: ' + selected_time);
+
+                  if(selected_time.length > 0){
+                    if($(selected_time).hasClass('express_delivery')){
+                      cartFunctions.updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+                    }else{
+                      cartFunctions.updateCartWidgetDelivery(true, (response.price === 0) ? 'бесплатно' : response.price);
+                    }
+                  }
+                }
+              });
+            }
+
+
+
+        		// пересчет кол-ва в краткой корзине при работе с кол-вом в блоке рекомендованно
+            shopModules._updateCartWidget(response.cart);
+
+            $.dispatch({
+                type: 'cart-table-update',
+                payload: response,
+                status: response.status
+            });
+
+            if (response['delivery']) {
+                $.dispatch({
+                    type: 'cart-delivery-update',
+                    payload: response,
+                    price: (!!response['void:delivery-price']['actual']) ? response['void:delivery-price']['actual'] : false
+                });
+            }
+        }
+    });
+};
+
+CartTableComponent.prototype.handleDispatcher = function(e) {
+    if (e.type === 'cart-table-update') {
+        // отобразить или скрыть wheel и подарочный товар
+        console.log('response.item.wheel.allow 11');
+        if (!!e.payload.item && !!e.payload.item.wheel && e.payload.item.wheel.hasOwnProperty('allow')) {
+          console.log('response.item.wheel.allow 22');
+          var wheel_hover = $('.wheel_hover'),
+              wheel_product = $('.wheel_product'),
+              wheel_wrap = $('.wheel_integration'),
+              wheelBtn = $('#wheel_button');;
+          
+          // можно ли крутить колесо
+          if(e.payload.item.wheel.allow_spin === true || e.payload.item.wheel.allow_spin == 'true' || e.payload.item.wheel.allow_spin == 1){
+            console.log('response.item.wheel.allow 33 show');
+            wheel_hover.addClass('hidden');
+            // показать колесо
+            wheel_wrap.removeClass('hidden');
+          }else{
+            console.log('response.item.wheel.allow 33 hide');
+            // заблокировать wheel
+            wheel_hover.removeClass('hidden');
+            // удалить подарочный товар
+            wheel_product.remove();
+            
+            
+            // пересчитать скидку правой корзины
+  
+            $.dispatch({
+              type: 'cart-discount-update',
+              status: false,
+              reason: 'wheelDiscount',
+              payload: {}
+            });
+  
+            if (!!e.payload['cart']) {
+              $.dispatch({
+                type: 'cart-table-update',
+                payload: e.payload['cart'],
+                status: e.payload.status
+              });
+            }
+          }
+  
+          // можно ли вообще участвовать в розыгрыше
+          if(e.payload.item.wheel.allow === true || e.payload.item.wheel.allow == 'true' || e.payload.item.wheel.allow == 1){
+            // показать колесо
+            
+            if(wheel_wrap.hasClass('hidden')){
+              wheel_wrap.removeClass('hidden');
+              wheel_wrap.removeClass('wide');
+              wheelBtn.data('status', 'open');
+              wheelBtn.text('НАЖМИТЕ, ЧТОБЫ ВЫИГРАТЬ ПРИЗ');
+            }
+            
+          }else{
+            // скрыть колесо
+            wheel_wrap.addClass('hidden');
+          }
+      
+      
+        }
+        this.handleItems(e.payload);
+    }
+};
+
+CartTableComponent.prototype.handleItems = function(payload) {
+    if (!!payload.items) {
+        if (!!payload.items['nodes:item']) {
+            for (var index in payload.items['nodes:item']) {
+                if (payload.items['nodes:item'].hasOwnProperty(index) && !!payload.items['nodes:item'][index]) {
+                    var itemData = payload.items['nodes:item'][index];
+                    this.handleItem(itemData);
+                }
+            }
+        }
+    }
+};
+
+CartTableComponent.prototype.handleItem = function(data) {
+    // console.log(data);
+
+    var $self = $(this);
+
+    var id = data['attribute:id'];
+    var price = null;
+    var sum = null;
+    var amount = null;
+    var discountPerc = null;
+
+    var $good = $self.find('[data-cart-item-id="' + id + '"]');
+
+    var $amount = $good.find('.cart-table-good__amount input');
+    var $priceOne = $good.find('.cart-table-good__price-one');
+    var $priceSum = $good.find('.cart-table-good__price-sum');
+    var $priceDisc = $good.find('.cart-table-good__price-discount');
+
+    if (!!data['amount']) {
+        amount = data['amount'];
+    }
+    if (!!data['price'] && !!data['price']['actual']) {
+        price = data['price']['actual'];
+    }
+    if (!!data['total-price'] && data['total-price']['actual']) {
+        sum = data['total-price']['actual'];
+    }
+    if (!!data['discount_percents']) {
+        discountPerc = data['discount_percents'];
+    }
+
+    sum && $priceSum.html(sum + ' руб.');
+    price && $priceOne.html(price + ' руб./шт.');
+    amount && $amount.val(amount);
+    discountPerc && $priceDisc.html('-' + discountPerc + '%');
+
+    $priceOne.toggleClass('hidden', amount <= 1);
+    $priceDisc.toggleClass('hidden', discountPerc <= 0);
+}
+
+customElements.define('cart-table', CartTableComponent);
+function CartRefundBottlesComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartRefundBottlesComponent.prototype = Object.create(HTMLElement.prototype);
+CartRefundBottlesComponent.prototype.constructor = CartRefundBottlesComponent;
+Object.setPrototypeOf(CartRefundBottlesComponent, HTMLElement);
+
+CartRefundBottlesComponent.prototype.connectedCallback = function() {
+    this._$self = $(this);
+    this._$input = $('input', $(this));
+
+    this._$input.on('keyup.bottlesRefundInput', this.handleKeyUp.bind(this));
+};
+
+CartRefundBottlesComponent.prototype.disconnectedCallback = function() {
+    this._$input.off('keyup.bottlesRefundInput');
+};
+
+CartRefundBottlesComponent.prototype.handleKeyUp = function(e) {
+
+		this._$self.find('input').val(this._$self.find('input').val().replace(/[^0-9]/g, ''));
+
+    var self = this;
+    var formData = this._$self.find('input, select, textarea').serializeObject(),
+        data = $.extend({ customAction: 'refundBottles' }, this._$self.data(), formData);
+
+    helpers.delay.call(self._$self, function() {
+        $.ajax({
+            url: self._$self.data('action') || window.location,
+            method: self._$self.data('method') || 'post',
+            dataType: 'json',
+            data: data,
+            success: function(response) {
+                if (!!response.status) {
+                    // do some
+                }
+                else {
+                    // do some
+                }
+            }
+        });
+    }, 500);
+};
+
+customElements.define('cart-refund', CartRefundBottlesComponent);
+function CartPhoneComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartPhoneComponent.prototype = Object.create(HTMLElement.prototype);
+CartPhoneComponent.prototype.constructor = CartPhoneComponent;
+Object.setPrototypeOf(CartPhoneComponent, HTMLElement);
+
+CartPhoneComponent.prototype.connectedCallback = function() {
+    this.checkSMS = this.checkSMS.bind(this);
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+
+    this._options = {
+        id: $(this).data('id'),
+        timer: $(this).data('timer')
+    };
+
+    this._state = {
+        sent: false,
+        confirm: false,
+        phoneComplete: false
+    };
+
+    this._$self = $(this);
+
+    this._$num = $('.cart-checkout-phone__num', this._$self);
+    this._$sms = $('.cart-checkout-phone__sms', this._$self);
+    this._$numI = $('input', this._$num);
+    this._$smsI = $('input', this._$sms);
+
+    this._$send = this._$self.find('.cart-checkout-phone__send');
+    this._$tools = this._$self.find('.cart-checkout-phone__tools');
+    this._$notice = this._$self.find('.cart-checkout-phone__notice');
+    this._$count = this._$self.find('.cart-checkout-phone__count-down')
+    this._$countLine = this._$self.find('.cart-checkout-phone__count-down-line');
+
+    this._$changeAction = this._$self.find('.cart-checkout-phone__tools-btn[data-action="change"]');
+    this._$repeatAction = this._$self.find('.cart-checkout-phone__tools-btn[data-action="repeat"]');
+
+    this._$numI.on('keyup.phoneInput', this.handlePhoneInput.bind(this));
+    this._$smsI.on('keyup.smsInput', this.handleSMSInput.bind(this));
+
+    this._$send.on('click.sendSMS', this.sendSMS.bind(this));
+
+    this._$changeAction.on('click.changePhone', this.changePhone.bind(this));
+    this._$repeatAction.on('click.changePhone', this.repeatSMS.bind(this));
+
+    $.subscribe(this.handleDispatcher);
+};
+
+CartPhoneComponent.prototype.disconnectedCallback = function() {
+    this._$numI.off('keyup.phoneInput');
+    this._$send.off('click.sendSMS');
+};
+
+CartPhoneComponent.prototype.handleDispatcher = function(e) {
+    if (e.type === 'count-down-complete' && e.id === this._options.id) {
+        this._$repeatAction.prop('disabled', false);
+        this._$countLine.toggleClass('hidden', true);
+    }
+};
+
+CartPhoneComponent.prototype.changePhone = function() {
+    this._$smsI.val('');
+    this._$numI.val('');
+    this._$numI.prop('readonly', false)
+    this._$numI.trigger('change');
+    this._$numI.data('phonecomplete', false);
+
+    this._$sms.addClass('hidden');
+    this._$send.addClass('hidden');
+    this._$tools.addClass('hidden');
+    this._$notice.addClass('hidden');
+    this._$count.addClass('hidden');
+    this._$countLine.toggleClass('hidden', false);
+
+		// custom add disable confir_by_phone
+		$('.js-confirm-by-phone')
+       .prop('checked', true)
+       .prop('disabled', true);
+    //\ custom add disable confir_by_phone
+
+    $.dispatch({
+        id: this._options.id,
+        type: 'count-down-stop'
+    });
+};
+
+CartPhoneComponent.prototype.repeatSMS = function() {
+    this.sendSMS();
+};
+
+CartPhoneComponent.prototype.sendSMS = function() {
+    this._state.sent = true;
+
+    this._$sms.removeClass('hidden');
+    this._$send.addClass('hidden');
+    this._$numI.prop('readonly', true);
+
+    this._$tools.toggleClass('hidden', true);
+    this._$notice.toggleClass('hidden', true);
+    this._$repeatAction.prop('disabled', true);
+    this._$count.toggleClass('hidden', false);
+    this._$countLine.toggleClass('hidden', false);
+
+    $.dispatch({
+        type: 'count-down-start',
+        id: this._options.id,
+        timer: this._options.timer + 1
+    });
+
+    $.ajax({
+        url: this._$self.data('sendPhone'),
+        method: this._$self.data('method') || 'post',
+        dataType: 'json',
+        data: {
+            phone: this._$numI.val()
+        },
+        success: function(response) {}
+    });
+};
+
+CartPhoneComponent.prototype.checkSMS = function() {
+    var self = this;
+
+    self._$self.prop('readonly', true);
+    self._$smsI.data('smscodevalid', false);
+
+    $.ajax({
+        url: self._$self.data('checkPhone'),
+        method: 'post',
+        dataType: 'json',
+        data: {
+            sms: self._$smsI.val()
+        },
+        success: function(response) {
+            var msg = 'Что-то пошло не так',
+                isSuccessfull = false;
+
+            if (!!response.code) {
+                msg = response.msg || 'Что-то пошло не так';
+                if (!(response.code === 10 || response.code === 30)) {
+                    self._$self.prop('readonly', false);
+                    self._$smsI.data('smscodevalid', false);
+
+                    $('.js-confirm-by-phone')
+                         .prop('checked', true)
+                         .prop('disabled', true);
+                }
+                else {
+                    self._$self.prop('readonly', true);
+                    self._$smsI.data('smscodevalid', true);
+
+                    $('.js-confirm-by-phone').prop('disabled', false);
+
+                    isSuccessfull = true;
+                }
+            }
+
+            if (isSuccessfull) {
+                formNotifications.hideErrorLabel.call(self._$smsI.closest('.b-form_box'));
+
+                self._$sms.addClass('hidden');
+                self._$send.addClass('hidden');
+                self._$tools.removeClass('hidden');
+                self._$notice.addClass('hidden');
+                self._$count.addClass('hidden');
+                self._$countLine.toggleClass('hidden', false);
+
+                $.dispatch({
+                    id: self._options.id,
+                    type: 'count-down-stop'
+                });
+            }
+            else {
+                formNotifications.showErrorLabel.call(self._$smsI.closest('.b-form_box'), msg, 0);
+                // console.warn('Вывод ошибки!', response);
+            }
+        }
+    });
+};
+
+CartPhoneComponent.prototype.handlePhoneInput = function(e) {
+    this._state.phoneComplete = this._$numI.data('phonecomplete');
+
+    console.log('phonecomplete');
+    console.log(this._state.phoneComplete);
+
+    this._$send.toggleClass('hidden', !this._state.phoneComplete);
+    this._$notice.toggleClass('hidden', !this._state.phoneComplete);
+};
+
+CartPhoneComponent.prototype.handleSMSInput = function() {
+    var self = this;
+
+    helpers.delay.call(self._$sms, function() {
+        var isComplete = self._$smsI.val().length === 4 && self._$smsI.data('maskComplete');
+
+        if (isComplete) {
+            self.checkSMS();
+        }
+        else {
+            formNotifications.hideErrorLabel.call(self._$smsI.closest('.b-form_box'));
+            // console.warn('SMS code is invalid (check by mask)!');
+        }
+    }, 200);
+};
+
+customElements.define('cart-phone', CartPhoneComponent);
+function CartPromoCodeComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartPromoCodeComponent.prototype = Object.create(HTMLElement.prototype);
+CartPromoCodeComponent.prototype.constructor = CartPromoCodeComponent;
+Object.setPrototypeOf(CartPromoCodeComponent, HTMLElement);
+
+CartPromoCodeComponent.prototype.connectedCallback = function() {
+    this.handleError = this.handleError.bind(this);
+    this.handleSuccess = this.handleSuccess.bind(this);
+
+    this._$self = $(this);
+    this._$btn = $('.cart-summary__promo-code-btn', $(this));
+    this._$input = $('.cart-summary__promo-code-input input', $(this));
+    this._$notice = $('.cart-summary__promo-code-notice', $(this));
+
+    this._$btn.on('click.applyPromoCode', this.handleApply.bind(this));
+    this._$input.on('keyup.promoCodeInput', this.handleKeyUp.bind(this));
+
+    this._$self.on('promoCode.reset', this.resetPromoCode.bind(this));
+};
+
+CartPromoCodeComponent.prototype.disconnectedCallback = function() {
+    this._$btn.off('click.applyPromoCode');
+    this._$input.off('keyup.promoCodeInput');
+    this._$self.off('promoCode.reset');
+};
+
+CartPromoCodeComponent.prototype.resetPromoCode = function() {
+    this._$input.val('');
+    this._$input.prop('disabled', false);
+    this._$input.data('applied', false);
+
+    this._$btn.toggleClass('hidden', true);
+    this._$notice.toggleClass('hidden', true);
+
+    $.dispatch({
+        id: this._$self.data('id'),
+        type: 'error-message-hide'
+    });
+};
+
+CartPromoCodeComponent.prototype.handleKeyUp = function(e) {
+    this._$btn.toggleClass('hidden', this._$input.val().length === 0);
+
+    var $self = this._$self;
+    helpers.delay.call($self, function() {
+        $.dispatch({
+            id: $self.data('id'),
+            type: 'error-message-hide'
+        });
+    }, 200);
+};
+
+CartPromoCodeComponent.prototype.handleApply = function(e) {
+    var self = this;
+    var formData = this._$self.find('input, select, textarea').serializeObject(),
+        data = $.extend({ customAction: 'promoCode' }, this._$self.data(), formData);
+
+    $.ajax({
+        url: this._$self.data('action') || window.location,
+        method: this._$self.data('method') || 'post',
+        dataType: 'json',
+        data: data,
+        success: function(response) {
+            if (!!response.status) {
+                self.handleSuccess(response);
+            }
+            else if (!response.status) {
+                self.handleError(response);
+            }
+        },
+        error: function() {
+            self.handleError({
+                message: 'Произошла ошибка'
+            });
+        }
+    });
+};
+
+CartPromoCodeComponent.prototype.handleError = function(response) {
+    this._$input.prop('disabled', false);
+    this._$input.data('applied', false);
+
+    this._$btn.toggleClass('hidden', false);
+    this._$notice.toggleClass('hidden', true);
+
+    $.dispatch({
+        id: this._$self.data('id'),
+        type: 'error-message-show',
+        message: response.message || 'Некорректный промокод'
+    });
+
+    if (response['cart']) {
+        $.dispatch({
+            type: 'cart-table-update',
+            payload: response['cart'],
+            status: response.status
+        });
+    }
+
+    $.dispatch({
+        type: 'cart-discount-update',
+        status: false,
+        reason: 'promocode',
+        payload: {}
+    });
+};
+
+CartPromoCodeComponent.prototype.handleSuccess = function(response) {
+    this._$input.prop('disabled', true);
+    this._$input.data('applied', true);
+
+    this._$btn.toggleClass('hidden', true);
+    this._$notice.toggleClass('hidden', false);
+
+    $.dispatch({
+        id: this._$self.data('id'),
+        type: 'error-message-hide'
+    });
+
+    if (response['cart']) {
+        $.dispatch({
+            type: 'cart-table-update',
+            payload: response['cart'],
+            status: response.status
+        });
+    }
+    if (response['item']) {
+        $.dispatch({
+            type: 'cart-discount-update',
+            status: true,
+            reason: 'promocode',
+            payload: response['item']
+        });
+    }
+};
+
+customElements.define('cart-promocode', CartPromoCodeComponent);
+function CartPaymentComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartPaymentComponent.prototype = Object.create(HTMLElement.prototype);
+CartPaymentComponent.prototype.constructor = CartPaymentComponent;
+Object.setPrototypeOf(CartPaymentComponent, HTMLElement);
+
+CartPaymentComponent.prototype.connectedCallback = function() {
+    $(this).on('change.onlinPaymentComponent', 'input', this.handleChange.bind(this));
+};
+
+CartPaymentComponent.prototype.disconnectedCallback = function() {
+    $(this).off('change.onlinPaymentComponent');
+};
+
+CartPaymentComponent.prototype.handleChange = function(e) {
+    var checked = $(this).find(':checked');
+
+    $.dispatch({
+        type: 'cart-payment-change',
+        payload: {
+            checked: checked
+        }
+    });
+};
+
+customElements.define('cart-payment', CartPaymentComponent);
+function CartDatesCaptionComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartDatesCaptionComponent.prototype = Object.create(HTMLElement.prototype);
+CartDatesCaptionComponent.prototype.constructor = CartDatesCaptionComponent;
+Object.setPrototypeOf(CartDatesCaptionComponent, HTMLElement);
+
+CartDatesCaptionComponent.prototype.connectedCallback = function() {
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+    this.texts = $(this).data('texts');
+
+    $.subscribe(this.handleDispatcher);
+};
+
+CartDatesCaptionComponent.prototype.disconnectedCallback = function() {
+    $.unsubscribe(this.handleDispatcher);
+};
+
+CartDatesCaptionComponent.prototype.handleDispatcher = function(e) {
+    if (e.type === 'cart-delivery-type-change') {
+        $(this).html(this.texts[e.payload] || 'Дата и время:')
+    }
+};
+
+customElements.define('cart-dates-caption', CartDatesCaptionComponent);
+function CartTimeContainerComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartTimeContainerComponent.prototype = Object.create(HTMLElement.prototype);
+CartTimeContainerComponent.prototype.constructor = CartTimeContainerComponent;
+Object.setPrototypeOf(CartTimeContainerComponent, HTMLElement);
+
+CartTimeContainerComponent.prototype.connectedCallback = function() {
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+    this.handleResponse = this.handleResponse.bind(this);
+    this.handleTimeList = this.handleTimeList.bind(this);
+
+    this._date = null;
+    this._$self = $(this);
+
+    this._autoChangeToNext = this._$self.data('autoChangeDateToNext');
+
+    this._$notice = $('.cart-checkout-datetime__notice', this._$self);
+    this._$selector = $('.cart-checkout-datetime__time', this._$self);
+    this._$selectorInner = $('.cart-checkout-datetime__time-inner', this._$self);
+    this._$datepicker = $('.cart-checkout-datetime .js-datePicker input');
+
+    $('body').on('change.changeCartDate', '.cart-checkout-datetime .js-datePicker input', this.changeDate.bind(this));
+
+    $.subscribe(this.handleDispatcher);
+};
+
+CartTimeContainerComponent.prototype.disconnectedCallback = function() {
+    $.unsubscribe(this.handleDispatcher);
+};
+
+CartTimeContainerComponent.prototype.changeDate = function(e) {
+	  console.log('CartTimeContainerComponent.prototype.changeDate');
+    var self = this;
+
+    this._date = this._$datepicker.val();
+
+
+
+    $.dispatch({
+       type: 'cart-time-container-toggle',
+       payload: !!this._date.length
+    });
+
+
+    /*if ($(this).data('apiUrl')) {
+    	//console.log('CartTimeContainerComponent.prototype.changeDate');
+        var apiUrl = $(this).data('apiUrl').replace('${date}', this._date);
+
+        $.ajax({
+            url: apiUrl,
+            dataType: 'json',
+            success: function(response) {
+                self.handleResponse(response);
+            }
+        });
+    }*/
+    // custom add при переключении на тип доставки самовывоз, не пересчитывать дни и стоимость доставки
+		console.log('refresh date in calendar');
+		console.log(this._date);
+		if(!!this._date.length){
+			if ($(this).data('apiUrl')) {
+    	//console.log('CartTimeContainerComponent.prototype.changeDate');
+        var apiUrl = $(this).data('apiUrl').replace('${date}', this._date);
+
+        $.ajax({
+            url: apiUrl,
+            dataType: 'json',
+            success: function(response) {
+                self.handleResponse(response);
+            }
+        });
+    }
+		}
+		//\ custom add при переключении на тип доставки самовывоз, не пересчитывать дни и стоимость доставки
+
+
+};
+
+CartTimeContainerComponent.prototype.handleResponse = function(response) {
+    if (typeof response.price !== 'undefined') {
+        $.dispatch({
+            type: 'cart-address-for-delivery',
+            payload: response,
+            allow: true
+        });
+    }
+    else {
+        $.dispatch({
+            type: 'cart-address-for-delivery',
+            allow: false
+        });
+    }
+
+    var availablePeriod = !helpers.checkBool(response['noAvaliablePeriod']);
+
+		console.log(response);
+
+    cartFunctions.updateCartWidgetDelivery(true, false);
+
+    var deliveryExpress = isToday = false;
+    if (!!response.deliveryExpress && !!response.isToday && !!response.deliveryExpressPrice && response.deliveryExpressPrice > 0){
+
+    	switch(response.deliveryExpress){
+        case "true": case "yes": case "1": deliveryExpress = true;  break;
+        case "false": case "no": case "0": case null: deliveryExpress = false; break;
+        default: deliveryExpress = Boolean(response.deliveryExpress);  break;
+    	}
+    	switch(response.isToday){
+        case "true": case "yes": case "1": isToday = true; break;
+        case "false": case "no": case "0": case null: isToday = false; break;
+        default: isToday = Boolean(response.isToday); break;
+    	}
+
+     if(deliveryExpress === true && isToday === true && response.deliveryExpressPrice > 0 ){
+		  	console.log('express доставка');
+
+		  	// custom add clear time list
+				this._$selectorInner.html('');
+				//\ custom add clear time list
+		  	// custom add innsert time period item
+				var period_time_item_TODEL = '<div class="express_delivery_wrap"><span class="express_delivery_notice_1">Доставим ваш заказ за час</span><label class="express_delivery_input">'+
+		                                '<input class="js-pure express_delivery" type="radio" name="time" value="express доставка" data-required="true"  />'+
+		                                '<span><i>EXPRESS</i> доставка <span class="express_delivery_price">+'+ response.deliveryExpressPrice +'Р</span></span>'+
+		                            '</label><span class="express_delivery_notice_2">*Доступно только для физических лиц</span></div>';
+				var period_time_item = '<div class="express_delivery_wrap" data-mark_date="yes"><label class="express_delivery_input">'+
+                     '<input class="js-pure express_delivery" type="radio" name="time" value="express доставка" data-required="true"  />'+
+                     '<span>Доставка в течение часа</span>'+
+                     '</label><span class="express_delivery_notice_2">*Доступно только для физических лиц <br/>**Стоимость услуги <span class="express_delivery_price">'+ response.deliveryExpressPrice +' Р</span></span></div>';
+
+         this._$selectorInner.append(period_time_item);
+				//\ custom add innsert time period item
+
+		    var $input = this._$selectorInner.find('.express_delivery');
+
+		    $input.prop('disabled', false);
+		    //$input.prop('checked', 1);
+
+		    //cartFunctions.updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+		  }
+    }
+
+    if (availablePeriod || (deliveryExpress && isToday)) {
+        if(availablePeriod){
+        	this.handleTimeList(response['period'], (deliveryExpress && isToday))
+        }
+
+
+        $.dispatch({
+            id: 'delivery-time',
+            type: 'error-message-hide'
+        });
+    }
+    else {
+        this.handleTimeList({}, response);
+
+        if (this._autoChangeToNext) {
+            this._$datepicker.parent()
+                .find('.datepicker--cell-day.-current-') // selected day
+                .next() // selected next day
+                .trigger('click'); // auto select
+        }
+        else {
+            $.dispatch({
+                id: 'delivery-time',
+                type: 'error-message-show',
+                message: 'Выберите другую дату'
+            });
+        }
+    }
+
+
+    this._$selectorInner.on('change', '.js-pure', function(){
+    	console.log('time_input_change');
+    	if($(this).hasClass('express_delivery')){
+    		cartFunctions.updateCartWidgetDelivery(true, response.deliveryExpressPrice);
+    	}else{
+    		cartFunctions.updateCartWidgetDelivery(true, (response.price === 0) ? 'бесплатно' : response.price);
+    	}
+    });
+};
+
+//custom add
+    function stringToBoolean(param_value){
+        switch(param_value){
+            case "true": case "yes": case "1": return true;
+            case "false": case "no": case "0": case null: return false;
+            default: return Boolean(param_value);
+        }
+    }
+
+CartTimeContainerComponent.prototype.handleTimeList = function(period, deliveryExpress) {
+		console.log('time insert');
+		console.log(period);
+		console.log(deliveryExpress);
+
+		// custom add clear time list
+
+		if(deliveryExpress !== true){
+			this._$selectorInner.html('');
+
+			this._$selectorInner.find('input').each(function() {
+        $(this)
+            .prop('disabled', true)
+            .prop('checked', false);
+    	});
+		}
+		//\ custom add clear time list
+
+
+
+    if (period['item']) {
+
+        for (var i in period['item']) {
+            if (period['item'].hasOwnProperty(i)) {
+                var item = period['item'][i];
+                var from = item.from;
+                var to = item.to;
+
+								// custom add innsert time period item
+								var period_time_item = '<label>'+
+	                                          '<input class="js-pure" type="radio" name="time" value="' + from + '-' + to + '" data-period="' + from + '-' + to + '" data-required="true"  />'+
+	                                          '<span>' + from + '-' + to + '</span>'+
+	                                      '</label>';
+                this._$selectorInner.append(period_time_item);
+								//\ custom add innsert time period item
+
+                var $input = this._$selectorInner.find('input[data-period="' + from + '-' + to + '"]');
+
+                $input.prop('disabled', false);
+                //$input.prop('checked', (i === 0 || i === '0') && !deliveryExpress);
+            }
+        }
+    }
+
+
+};
+
+CartTimeContainerComponent.prototype.handleDispatcher = function(e) {
+    if (e.type === 'cart-delivery-type-change' && e.payload) {
+    		var $action = (e.payload === '#pickup') ? '/emarket/eonestep/pickup/do/' : '/emarket/eonestep/delivery/do/';
+    		var $delivery_id = (e.payload === '#pickup') ? '6516' : '601';
+    		$('.eone_form').attr('action', $action);
+    		$('.js-delivery-id').val($delivery_id);
+
+        $(this).toggleClass('hidden', e.payload === '#pickup');
+
+        // Reset selected day
+        this._$datepicker.parent().find('.datepicker--cell-day.-selected-').trigger('click');
+        var $dateInput = $('.js-datePicker input');
+        $dateInput.val('')
+        $dateInput.trigger('change.changeCartDate');
+    }
+
+    if (e.type === 'cart-time-container-toggle') {
+        this._$notice.toggleClass('hidden', e.payload);
+        this._$selector.toggleClass('hidden', !e.payload);
+    }
+
+    // if (e.type === 'cart-delivery-date-time' && e.payload) {
+    //     this.handleResponse(e.payload);
+    // }
+};
+
+customElements.define('cart-time-container', CartTimeContainerComponent);
+function CartNoticeComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CartNoticeComponent.prototype = Object.create(HTMLElement.prototype);
+CartNoticeComponent.prototype.constructor = CartNoticeComponent;
+Object.setPrototypeOf(CartNoticeComponent, HTMLElement);
+
+CartNoticeComponent.prototype.connectedCallback = function() {
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+
+    // $(this).on('click.clickOnError', this.handleClick.bind(this));
+    $.subscribe(this.handleDispatcher);
+};
+
+CartNoticeComponent.prototype.disconnectedCallback = function() {
+    // $(this).off('click.clickOnError');
+    $.unsubscribe(this.handleDispatcher);
+};
+
+CartNoticeComponent.prototype.handleClick = function(e) {
+    e.preventDefault();
+    var $self = $(this);
+
+    $self.removeClass('active');
+    setTimeout(function() {
+        $self.html(e.message);
+    }, 400);
+};
+
+CartNoticeComponent.prototype.handleDispatcher = function(e) {
+    var $self = $(this);
+
+    if (e.type === 'cart-notice-show') {
+        $self.toggleClass('hidden', false);
+        $self.find('> div').html(e.message);
+    }
+
+    if (e.type === 'cart-notice-hide' && (e.id ? e.id === $self.data('id') : true)) {
+        $self.toggleClass('hidden', true);
+        //$self.find('> div').empty();
+    }
+};
+
+customElements.define('cart-notice', CartNoticeComponent);
+function ContactlessPaymentComponent() {
+    return Reflect.construct(HTMLInputElement,[], this.constructor);
+}
+
+ContactlessPaymentComponent.prototype = Object.create(HTMLInputElement.prototype);
+ContactlessPaymentComponent.prototype.constructor = ContactlessPaymentComponent;
+Object.setPrototypeOf(ContactlessPaymentComponent, HTMLInputElement);
+
+ContactlessPaymentComponent.prototype.connectedCallback = function() {
+    this.handleDispatcher = this.handleDispatcher.bind(this)
+
+    $.subscribe(this.handleDispatcher);
+};
+
+ContactlessPaymentComponent.prototype.disconnectedCallback = function() {
+    $.unsubscribe(this.handleDispatcher);
+};
+
+ContactlessPaymentComponent.prototype.handleDispatcher = function(e) {
+    if (e.type === 'cart-payment-change') {
+        var disabled = !e.payload.checked.data('onlinePayment');
+        $(this).attr('disabled', disabled);
+
+        if (disabled) {
+            $(this).prop('checked', false)
+        }
+    }
+};
+
+customElements.define('contactless-payment', ContactlessPaymentComponent, { extends: 'input' });
+function CountDownComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+CountDownComponent.prototype = Object.create(HTMLElement.prototype);
+CountDownComponent.prototype.constructor = CountDownComponent;
+Object.setPrototypeOf(CountDownComponent, HTMLElement);
+
+CountDownComponent.prototype.connectedCallback = function() {
+    this.setText = this.setText.bind(this);
+    this.countDown = this.countDown.bind(this);
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+
+    this._timer = null;
+    this._current = 0;
+
+    $.subscribe(this.handleDispatcher);
+};
+
+CountDownComponent.prototype.disconnectedCallback = function() {
+    $.unsubscribe(this.handleDispatcher);
+};
+
+CountDownComponent.prototype.setText = function() {
+    $(this).html(this._current + ' ' + helpers.getNumEnding(this._current, $(this).data('decl')))
+};
+
+CountDownComponent.prototype.countDown = function(callback) {
+    var self = this;
+
+    self._current--;
+    this.setText();
+    if (self._current === 0) {
+        clearTimeout(self._timer);
+        if (!!callback)
+            callback();
+    } else {
+        this._timer = setTimeout(function() {
+            self.countDown(callback);
+        }, 1000);
+    }
+};
+
+CountDownComponent.prototype.handleDispatcher = function(e) {
+    var id = $(this).data('id');
+
+    if (e.type === 'count-down-start' && e.id === id) {
+        this._current = e.timer || 11;
+        this.countDown(function() {
+            $.dispatch({
+                id: id,
+                type: 'count-down-complete'
+            });
+        });
+    }
+    if (e.type === 'count-down-stop' && e.id === id) {
+        this._timer && clearTimeout(this._timer);
+        this._current = 0;
+        this.setText();
+    }
+};
+
+customElements.define('count-down', CountDownComponent);
+function ErrorMessageComponent() {
+    return Reflect.construct(HTMLElement,[], this.constructor);
+}
+
+ErrorMessageComponent.prototype = Object.create(HTMLElement.prototype);
+ErrorMessageComponent.prototype.constructor = ErrorMessageComponent;
+Object.setPrototypeOf(ErrorMessageComponent, HTMLElement);
+
+ErrorMessageComponent.prototype.connectedCallback = function() {
+    this.handleDispatcher = this.handleDispatcher.bind(this);
+
+    $(this).on('click.clickOnError', this.handleClick.bind(this));
+    $.subscribe(this.handleDispatcher);
+};
+
+ErrorMessageComponent.prototype.disconnectedCallback = function() {
+    $(this).off('click.clickOnError');
+    $.unsubscribe(this.handleDispatcher);
+};
+
+ErrorMessageComponent.prototype.handleClick = function(e) {
+    e.preventDefault();
+    var $self = $(this);
+
+    $self.removeClass('active');
+    setTimeout(function() {
+        $self.html(e.message);
+    }, 400);
+};
+
+ErrorMessageComponent.prototype.handleDispatcher = function(e) {
+    var $self = $(this);
+
+    if (e.type === 'error-message-show' && (e.id ? e.id === $self.data('id') : true)) {
+        $self.html(e.message);
+        setTimeout(function() {
+            $self.addClass('active');
+        }, 10);
+    }
+
+    if (e.type === 'error-message-hide' && (e.id ? e.id === $self.data('id') : true)) {
+        $self.removeClass('active');
+        setTimeout(function() {
+            $self.html(e.message);
+        }, 400);
+    }
+};
+
+customElements.define('error-message', ErrorMessageComponent);
+
+$(function() {
+	var currHash = window.location.hash;
+	var popupgood_pre = "popupgood=";
+	var good_pre = "good=";
+
+	if(currHash.indexOf(popupgood_pre) != -1){
+		var goodId = currHash.slice(currHash.indexOf(popupgood_pre) + popupgood_pre.length);
+		if(goodId.length > 0){
+			var hold = $('*[data-gid="'  + goodId + '"]').eq(0);
+			console.log(hold);
+			if(hold.length > 0){
+				$("html, body").animate({
+					scrollTop: (hold.offset().top)
+				}, 2000, function(){
+					$('.js-popup', hold).eq(0).trigger('click');
+				});
+
+			}
+		}
+	}else if(currHash.indexOf(good_pre) != -1){
+		var goodId = currHash.slice(currHash.indexOf(good_pre) + good_pre.length);
+		if(goodId.length > 0){
+			var hold = $('*[data-gid="'  + goodId + '"]').eq(0);
+			console.log(hold);
+			if(hold.length > 0){
+				$("html, body").animate({
+					scrollTop: (hold.offset().top)
+				}, 2000);
+
+			}
+		}
+	}
+});
+
+$(function() {
+	$('.js-add-to-cart_fake').click(function(){
+		$(this).parents('.b-mp-water_product_wrap').find('.js-add-to-cart').trigger('click');
+		console.log('fake');
+		return false;
+	})
+
+	$('.b-footer_cart.show.recommended_items_wrap').hover(function(){
+		$(this).addClass('recommended_items_footer');
+	},function(){
+		$(this).removeClass('recommended_items_footer');
+	})
+
+	$('.cart-error__close_link').click(function(){
+		$('.popup_er').removeClass('popup_er');
+		return false;
+	})
+
+});
+
+
+
+
+
+$(function() {
+
+	/*!
+ * Before After Slide Viewer - JavaScript ( jQUery plugin) for Before After Viewer
+ *
+ * Copyright (c) 2021 MAMEDUL ISLAM
+ *
+ * Licensed under the MIT license:
+ *   https://opensource.org/licenses/MIT
+ *
+ * Project home:
+ *   https://mamedul.gitlab.io/dev-projects/jquery-before-after-slider
+ *
+ * Version: 1.0.0
+ */
+!function(e){"use strict";jQuery.fn.beforeAfter=function(t){var o=jQuery.extend({movable:!0,clickMove:!0,alwaysShow:!0,position:50,opacity:.4,activeOpacity:1,hoverOpacity:.8,separatorColor:"#ffffff",bulletColor:"#ffffff",arrowColor:"#333333"},t);return this.each(function(){!function(t){if(2==jQuery(t).children().length){var r=e(t).children()[0],n=e(t).children()[1],i=e(t).css("position"),s=(e(t).css("z-index"),e(t).css("overflow")),c=e(r).css("position"),a=e(r).css("top"),u=e(r).css("left"),d=e(r).css("width"),l=e(r).css("height"),p=e(r).css("z-Index"),h="position:"+c+";top:"+a+";left:"+u+";width:"+d+";height:"+l+";z-index:"+p+";float:"+e(r).css("float"),y="position:"+e(n).css("position")+";top:"+e(n).css("top")+";left:"+e(n).css("left")+";width:"+e(n).css("width")+";height:"+e(n).css("height")+";z-index:"+e(n).css("z-Index");jQuery(t).attr("data-bareservedstyle","position:"+i+";overflow:"+s),jQuery(r).attr("data-bareservedstyle",h),jQuery(n).attr("data-bareservedstyle",y);var v=isNaN(parseInt(p))?0:parseInt(p),f="-webkit-user-select:none;-ms-user-select:none;user-select:none;";jQuery(t).css({position:"relative",overflow:"hidden"}),jQuery(r).css({position:"relative",top:"0",left:"0",width:"100%"}),jQuery(n).css({position:"absolute",top:"0",right:"0",width:"auto",height:"100%","z-index":v+1});var m=document.createElement("DIV");m.setAttribute("style","position:relative !important;width:100% !important;height:100%  !important;"+f),jQuery(r).clone({withDataAndEvents:!0}).appendTo(m);var j=document.createElement("DIV");j.setAttribute("style","position:absolute !important;width:"+o.position+"% !important;height:100% !important;top:0px !important;right:0px !important;overflow:hidden !important;"+f),jQuery(n).clone({withDataAndEvents:!0}).appendTo(j);var Q=document.createElement("I");Q.setAttribute("style","border:solid black;border-width:0 2px 2px 0;display:inline-block;padding:3px;transform:rotate(135deg);-webkit-transform:rotate(135deg);");var g=document.createElement("I");g.setAttribute("style","border:solid black;border-width:2px 0 0 2px;display:inline-block;padding:3px;transform:rotate(135deg);-webkit-transform:rotate(135deg);");var w=document.createElement("DIV");w.setAttribute("style","position:absolute;width:32px;height:32px;line-height:30px;padding:4xp;text-align:center;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;background-color:#fff;");var b=document.createElement("DIV");b.setAttribute("style","position:relative;width:100%;height:100%;");var x=document.createElement("DIV");x.setAttribute("style","position:absolute !important;width:2px !important;height:100% !important;top:0px !important;right:"+o.position+"% !important;overflow:visible !important;transform:translateX(50%) !important;background-color: #fff;cursor:e-resize;opacity:"+o.opacity+";z-index:"+v+"2;"+f),jQuery(Q).css("border-color",o.arrowColor),jQuery(g).css("border-color",o.arrowColor),jQuery(w).css("background-color",o.bulletColor),jQuery(x).css("background-color",o.separatorColor),w.append(Q),w.append(g),b.append(w),x.append(b),t.append(m),t.append(j),t.append(x),jQuery(r).remove(),jQuery(n).remove();var M=function(){jQuery(m).children().width()>0&&jQuery(j).children().width(jQuery(m).children().width()),jQuery(m).children().height()>0&&jQuery(j).children().height(jQuery(m).children().height())};if(jQuery(window).on("resize",M),o.movable){var k=!1;o.clickMove&&(jQuery(m).on("click",function(){void 0!==o.onMoveStart&&o.onMoveStart();var e=jQuery(t).width(),r=jQuery(x).css("right"),n=((parseInt(r)+Math.min(.05*e,5))/e*100).toFixed(2),i=n>100?100:n<0?0:n;i+="%",jQuery(j).width(i),jQuery(x).css("right",i),void 0!==o.onMoving&&r!=jQuery(x).css("right")&&o.onMoving(),void 0!==o.onMoveEnd&&o.onMoveEnd()}),jQuery(j).on("click",function(){void 0!==o.onMoveStart&&o.onMoveStart();var e=jQuery(t).width(),r=jQuery(x).css("right"),n=((parseInt(r)-Math.min(.05*e,5))/e*100).toFixed(2),i=n>100?100:n<0?0:n;i+="%",jQuery(j).width(i),jQuery(x).css("right",i),void 0!==o.onMoving&&r!=jQuery(x).css("right")&&o.onMoving(),void 0!==o.onMoveEnd&&o.onMoveEnd()})),jQuery(t).on("mouseenter",function(){jQuery(x).css("opacity",o.hoverOpacity)}),jQuery(t).on("mouseleave",function(){jQuery(x).css("opacity",o.opacity)});var E=function(e){var r=e.pageX||e.touches[0].clientX,n=jQuery(t).offset().left,i=jQuery(t).width(),s=jQuery(x).css("right"),c=((n+i-r)/i*100).toFixed(2),a=c>100?100:c<0?0:c;a+="%",jQuery(j).width(a),jQuery(x).css("right",a),void 0!==o.onMoving&&s!=jQuery(x).css("right")&&o.onMoving()},I=function(e){k=!0,jQuery(x).css("opacity",o.opacity),void 0!==o.onMoveEnd&&o.onMoveEnd()};jQuery(x).on("mousedown",function(e){k=!1,jQuery(x).css("opacity",o.activeOpacity),void 0!==o.onMoveStart&&o.onMoveStart(),jQuery(document).on("mousemove",E),jQuery(document).on("mouseup",function(e){jQuery(document).off("mousemove",E),k||I()}),jQuery(window).on("mouseup",function(e){jQuery(document).off("mousemove",E),k||I()})}),jQuery(x).on("touchstart",function(e){k=!1,void 0!==o.onMoveStart&&o.onMoveStart(),jQuery(x).css("opacity",o.activeOpacity),jQuery(document).on("touchmove",E),jQuery(document).on("touchcancel",function(e){jQuery(document).off("touchmove",E),k||I()}),jQuery(window).on("touchcancel",function(e){jQuery(document).off("touchmove",E),k||I()}),jQuery(document).on("touchend",function(e){jQuery(document).off("touchmove",E),k||I()})})}M()}else console.log("%cWarning: %s","color:#e4672e;font-size:200%;","BeforeAfter plugin need absolutely two childrens.")}(this)})}}(jQuery);
+
+
+	if($('.beforeAfter').length > 0){
+		$('.beforeAfter').beforeAfter({
+      movable: true,
+      clickMove: true,
+      position: 60,
+      separatorColor: '#fafafa',
+      bulletColor: '#fafafa',
+      onMoveStart: function(e) {
+          console.log(event.target);
+      },
+      onMoving: function() {
+          console.log(event.target);
+      },
+      onMoveEnd: function() {
+          console.log(event.target);
+      },
+  });
+	}
+
+
+});
+
+
+

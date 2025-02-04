@@ -13082,7 +13082,7 @@ return jQuery;
         _onChangeRange: function (e) {
             var $target = $(e.target),
                 name = $target.attr('name');
-            
+
             this.d.timepickerIsActive = true;
 
             this[name] = $target.val();
@@ -23592,24 +23592,24 @@ return jQuery;
 
     var touch = event.originalEvent.changedTouches[0],
         simulatedEvent = document.createEvent('MouseEvents');
-    
+
     // Initialize the simulated mouse event using the touch event's coordinates
     simulatedEvent.initMouseEvent(
       simulatedType,    // type
-      true,             // bubbles                    
-      true,             // cancelable                 
-      window,           // view                       
-      1,                // detail                     
-      touch.screenX,    // screenX                    
-      touch.screenY,    // screenY                    
-      touch.clientX,    // clientX                    
-      touch.clientY,    // clientY                    
-      false,            // ctrlKey                    
-      false,            // altKey                     
-      false,            // shiftKey                   
-      false,            // metaKey                    
-      0,                // button                     
-      null              // relatedTarget              
+      true,             // bubbles
+      true,             // cancelable
+      window,           // view
+      1,                // detail
+      touch.screenX,    // screenX
+      touch.screenY,    // screenY
+      touch.clientX,    // clientX
+      touch.clientY,    // clientY
+      false,            // ctrlKey
+      false,            // altKey
+      false,            // shiftKey
+      false,            // metaKey
+      0,                // button
+      null              // relatedTarget
     );
 
     // Dispatch the simulated event to the target element
@@ -23698,7 +23698,7 @@ return jQuery;
    * original mouse event handling methods.
    */
   mouseProto._mouseInit = function () {
-    
+
     var self = this;
 
     // Delegate the touch handlers to the widget's element
@@ -23716,7 +23716,7 @@ return jQuery;
    * Remove the touch event handlers
    */
   mouseProto._mouseDestroy = function () {
-    
+
     var self = this;
 
     // Delegate the touch handlers to the widget's element
@@ -25049,9 +25049,9 @@ Enjoy!
 
             // Call the eachField callback
             options.eachField.call(field, event, status, options);
-            
+
             //custom add
-            
+
             if(field.hasClass('js-phone-sms')){
             	if (!!field.data('smscodevalid') && field.data('smscodevalid')===true){
             		console.log('js-phone-sms  -  valid');
@@ -25098,7 +25098,7 @@ Enjoy!
             // Returns the field status
             return status;
         };
-        
+
     $.verifyForm = function(form, event) {
         var formValid = true,
             def = {
@@ -25662,7 +25662,7 @@ var forms = (function(window, undefined) {
     'use strict';
 
     var $body = $('body');
-    
+
     //custom add
     function stringToBoolean(param_value){
         switch(param_value){
@@ -25749,7 +25749,7 @@ var forms = (function(window, undefined) {
                                 notification = (options.required) ? ((!options.conditional) ? conditional : (!options.pattern) ? pattern : '') : required;
 
                             formNotifications.showErrorLabel.call($(this), notification, 0);
-                            
+
                             //custom add
                             console.log($(this));
                             if($(this).attr('name') == 'sms'){
@@ -25977,13 +25977,15 @@ var forms = (function(window, undefined) {
                     onKeyPress: function(cep) {
                     	if($field.hasClass('js-phone-field')){
                     		//console.log('phone keypress');
-                    		$field.data('phoneComplete', cep.replace(/\D/g, '').length === 11);
+                    		$field.data('phonecomplete', cep.replace(/\D/g, '').length === 11);
+                    		console.log('onKeyPress js-phone-field');
+                    		console.log(cep.replace(/\D/g, '').length === 11);
                     	}
                     	if($field.hasClass('js-phone-sms')){
                     		//console.log('sms code keypress');
                     		$field.data('smsCodeComplete', cep.replace(/\D/g, '').length === 4);
                     	}
-                        
+
                     }
                 });
 
@@ -26114,14 +26116,14 @@ var forms = (function(window, undefined) {
                             e.preventDefault();
 
                             step = Number($field.data('step') || 1);
-                            
+
                             min = Number($field.data('min') || step);
-                            
+
                             //custom add min for #bottles-refund
                             if($field.attr('id') == 'bottles-refund'){
                             	min = 0;
                             }
-                            //\custom add 
+                            //\custom add
 
                             var quantity = parseFloat($(this).closest('.b-spinner').find('input').val().replace(suffix, '')),
 
@@ -26246,7 +26248,7 @@ var forms = (function(window, undefined) {
                         //console.log(fd);
                         //clear errors
                         $('#checkout-time').parents('.b-form_box').removeClass('m-error').find('.b-form_box_error').remove();
-                        
+
                         $.ajax({
                             url: '/udata/emarket/deliveryDateParam/'+fd+'/.json',
                             dataType: 'json',
@@ -26262,9 +26264,9 @@ var forms = (function(window, undefined) {
                                 var select_html = '', j = 0;
                                 // console.log(response.noAvaliablePeriod); // TODEL
                                 if (stringToBoolean(response.noAvaliablePeriod) !== true) {
-                                
+
                                     select_html = select_html;// + '<option value=""></option>';
-                                    
+
                                     for (var i in response.period.item) {
                                         var item = response.period.item[i],
                                           from = item.from,
@@ -26276,41 +26278,49 @@ var forms = (function(window, undefined) {
 																					is_selected = 'selected';
 																				}
 																				j++;
-																				
+
                                         select_html = select_html + '<option ' + is_selected + ' value="'+period+'">'+ period +'</option>';
 
                                     }
-                                    
+
+									console.log('take_first_time');
                                     form.find('#checkout-time').html(select_html).prop('disabled', false).selectric('refresh');
                                     form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
-                            				form.find('#checkout-time').trigger('change'); 
-                                    
+                            				form.find('#checkout-time').trigger('change');
+
                                     //console.log('!-noAvaliablePeriod');
                                     //console.log(select_html);
                                 } else {
                                     select_html = '<option value="">' ; //select_html;// + '<option value=""></option><option value="-">Выберите другую дату</option>';
-                            		    
-                            		    
+
+
                             		    //$('#checkout-time option').remove();
+									console.log('take_first_time_no_period');
                             		    form.find('#checkout-time').html(select_html).prop('disabled', true).selectric('refresh');
-                            		    form.find('#checkout-time').trigger('change'); 
+                            		    form.find('#checkout-time').trigger('change');
 
                                 		form.find('#checkout-time').parents('.b-form_box').addClass('m-error').append( '<div class="b-form_box_error">Выберите другую дату</div>' );
-                                		
+
+										if( form.find('#checkout-time option').length == 1  && form.find('#checkout-time option:eq(0)').val() == '') {
+											console.log('empty time');
+											if(form.find('.datepicker--cell-day.-current-').length > 0){
+												form.find('.datepicker--cell-day.-current-').next().trigger('click');
+											}
+										}
                                 		//console.log('noAvaliablePeriod');
                                     //console.log(select_html);
                                 }
                                 //select_html = select_html + '</select>';
                                 //console.log(select_html);
-                                
+
                                 //dateBlock.find('select').prop('disabled', false).selectric('refresh');
-                                
-                                
-                                
+
+
+
                                 //$('.js-checkout-time_wrap').html(select_html);
                                 //forms.styleSelects('.js-checkout-time_wrap select.js-selectric');
-                                
-                                
+
+
                                 // console.log(response.result);
                                 // if (parseInt(response.result) > 0) {
                                 //     water_amount = response.result;
@@ -26617,6 +26627,7 @@ var formNotifications = (function(window, undefined) {
 
             $field
                 .removeClass(settings.validClass)
+                .removeClass('m-successful') // custom add
                 .addClass(settings.errorClass);
 
         }, 100);
@@ -26634,6 +26645,7 @@ var formNotifications = (function(window, undefined) {
         var $field = this.closest('.b-form_box');
 
         $field.removeClass(settings.errorClass);
+        $field.removeClass('m-successful'); // custom add
         $field.find('.b-form_box' + settings.errorSuffix).remove();
 
         if ($field.find('[data-required]').length) {
@@ -29197,7 +29209,7 @@ var shopModules = (function(window, undefined) {
     }
 
     function requestHandler(response, $item, $list, $cartTotal) {
-        
+
         if (!!response.status) {
             if (!!response.cart) {
                 _updateCartWidget(response.cart);
@@ -29224,7 +29236,7 @@ var shopModules = (function(window, undefined) {
 	                            price = 'NULL',
 	                            new_amount = 'NULL',
 	                            sum = 'NULL';
-	
+
 	                        if (!!item["price"]) {
 	                            price = item["price"].actual;
 	                        }
@@ -29234,21 +29246,21 @@ var shopModules = (function(window, undefined) {
 	                        if (!!item["amount"]) {
 	                            new_amount = item["amount"];
 	                        }
-											
+
 	                        var $currentItem = $('.b-cart_table_feed .cart_item_' + item_id);
-	
+
 	                        $currentItem
 	                            .find('[data-price]')
 	                            .data('price', price);
-	
+
 	                        var actualPriceArray = $currentItem.find('[data-actual-price-array]').data('actual-price-array'),
 	                            actualPrice = 0,
 	                            originPrice = 0,
-	
+
 	                            index = 0,
-	
+
 	                            origin_sum_text = '';
-	
+
 	                        $.each(actualPriceArray, function(i) {
 	                            // if (amount >= this.range[0] && (this.range.length > 1 ? amount <= this.range[1] : actualPriceArray.length === i + 1 ? true : amount <= this.range[0]))
 	                            if (
@@ -29271,7 +29283,7 @@ var shopModules = (function(window, undefined) {
 	                                }
 	                            }
 	                        });
-	
+
 	                        $currentItem
 	                            .find('[data-price]')
 	                            .html(origin_sum_text + sum.toString());
@@ -29310,6 +29322,8 @@ var shopModules = (function(window, undefined) {
                     console.log('change.updateCart');
                     console.log(response);
                     requestHandler(response, $item, $list, $cartTotal);
+
+					$('.js-tabs-btn.current').trigger('click');
                 }
             });
             //\custom add
@@ -29328,7 +29342,7 @@ var shopModules = (function(window, undefined) {
 
                 formData = $item.find('input, select, textarea').serializeObject(),
                 data = $.extend({ customAction: 'remove' }, $btn.data(), formData);
-                
+
 
             $.ajax({
                 url: $btn.attr('href') || $btn.data('url') || window.location,
@@ -29381,7 +29395,7 @@ var shopModules = (function(window, undefined) {
                         // custom add
 
                         var itemsLength = $list.find('.b-cart_table_item').length;
-												
+
 												console.log('-on remove-');
 												console.log(itemsLength);
 												console.log($list.find('.b-cart_table_item'));
@@ -29396,9 +29410,9 @@ var shopModules = (function(window, undefined) {
                                         		console.log($item);
                                             $item.remove();
                                             _cartTableTotal.call($list, true);
-                                            
+
                                             var itemsLength = $list.find('.b-cart_table_item').length;
-												
+
 																						console.log('-on remove again-');
 																						console.log(itemsLength);
 																						console.log($list.find('.b-cart_table_item'));
@@ -29416,9 +29430,9 @@ var shopModules = (function(window, undefined) {
                                             complete: function() {
                                                 $item.remove();
                                                 _cartTableTotal.call($list, true);
-                                                
+
                                                 var itemsLength = $list.find('.b-cart_table_item').length;
-												
+
 																								console.log('-on remove again2-');
 																								console.log(itemsLength);
 																								console.log($list.find('.b-cart_table_item'));
@@ -29429,9 +29443,12 @@ var shopModules = (function(window, undefined) {
                                         });
                                 }
                             }
-                            
+
                             // add custom update cart item price
                             requestHandler(response, $item, $list, $cartTotal);
+
+                            // add custom recalc discount item
+                            $('.js-tabs-btn.current').trigger('click');
                         }
                         else {
                             _clearCart.call($list);
@@ -29447,7 +29464,7 @@ var shopModules = (function(window, undefined) {
 
     function _clearCart() {
     		console.log('_clearCart');
-    	
+
         this
             .add($('.b-checkout_footer'))
             .toggleClass('fade', true)
@@ -29466,16 +29483,16 @@ var shopModules = (function(window, undefined) {
             .removeClass('hidden')
             .slideDown({ duration: 400, easing: 'easeOutQuart' })
             .removeClass('fade');*/
-        
-        // custom add hide cart form    
+
+        // custom add hide cart form
         $('.b-cart_notice')
         		.removeClass('hidden')
             .slideDown({ duration: 400, easing: 'easeOutQuart' })
             .removeClass('fade')
 						.nextAll()
             .hide();
-            
-            
+
+
         $('.b-checkout_full')
             .slideUp({ duration: 400, easing: 'easeOutQuart' });
     }
@@ -29673,11 +29690,11 @@ var shopModules = (function(window, undefined) {
                             datePicker.removeClass('disabled');
                             dateBlock.find('select').prop('disabled', false).selectric('refresh');
                             forms.toggleValidation.call(dateBlock, true, false);
-                            
+
                             // add custom take current day
                             //console.log(form.find('.datepicker--cell-day.-current-'));
-                            
-                            /*form.find('.datepicker--cell-day.-current-').trigger('click');                            
+
+                            /*form.find('.datepicker--cell-day.-current-').trigger('click');
                             form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
                             form.find('#checkout-time').trigger('change');  */
                         }
@@ -29712,7 +29729,7 @@ var shopModules = (function(window, undefined) {
             });
         });
     }
-    
+
     $body.on('change.emitActionForPhoneConfirmation emit.actionForPhoneConfirmation', '.b-checkout_form input, .b-checkout_form select', function (e) {
             //console.log('check sms code fields');
             var $form = $(this).closest('form'),
@@ -29724,33 +29741,34 @@ var shopModules = (function(window, undefined) {
             $form.find("[data-required-phone]").each(function(){
             	var $curr_field = $(this),
             			$curr_field_required = $curr_field.data('required');
-            			
-            	
+
+
             	$curr_field
             		.attr('data-old-required', !!$curr_field_required)
                 .data('old-required', !!$curr_field_required);
-                
+
               $curr_field
                 .attr('data-required', true)
                 .data('required', true);
-                
+
             	//console.log('verifed-filed:');
             	//console.log($curr_field);
             });
-            
+
             // validate field for sms code
             var verifed = $.verifyForm($form, { type: 'submit' }, {}),
                 smsCode = $form.find('.js-phone-sms').data('smscodevalid') === true || $form.find('.js-phone-sms').data('smscodevalid') === '' ; //!!$('.js-phone-sms').data('smscodevalid');
-						
+
 						//console.log('verifed:' + verifed);
 						//console.log('smsCode:' + smsCode);
             if (verifed && smsCode) {
                 target.prop('disabled', false);
             }
             else {
-                target.prop('disabled', true).prop('checked', true);
+                //target.prop('disabled', true).prop('checked', true);
+                target.prop('disabled', true).prop('checked', false);
             }
-            
+
             //set all required-phone field to old required value
             $form.find("[data-required-phone]").each(function(){
             	var $curr_field = $(this),
@@ -29759,15 +29777,63 @@ var shopModules = (function(window, undefined) {
               $curr_field
                 .attr('data-required', !!$old_field_required)
                 .data('required', !!$old_field_required);
-                
-            	
+
+
             });
-            
+
         });
 
     function phoneConfirmation() {
     		var isSent = false;
-    		
+
+		function recaptcha_delivery_suc() {
+			var $btn = $('#delivery .js-phone-sms-send'),
+				$wg = $btn.closest('.js-phone'),
+				$timer = $wg.find('.js-phone-sms-timer'),
+				$field = $wg.find('.js-phone-field');
+
+			//hide recaptcha
+			$btn.closest('form').find('.g-recaptcha').addClass('hidden');
+
+			$btn.data('repeat_count', 0);
+			$timer
+				.removeClass('hidden')
+				.find('[data-timer]')
+				.html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+
+			smsCountDown(function() {
+				isSent = false;
+				$timer.addClass('hidden');
+				$btn.removeClass('hidden');
+				$field.prop('hidden', false);
+			}, $timer.find('[data-timer]'));
+		};
+		function recaptcha_pickup_suc() {
+			var $btn = $('#pickup .js-phone-sms-send'),
+				$wg = $btn.closest('.js-phone'),
+				$timer = $wg.find('.js-phone-sms-timer'),
+				$field = $wg.find('.js-phone-field');
+
+			//hide recaptcha
+			$btn.closest('form').find('.g-recaptcha').addClass('hidden');
+
+			$btn.data('repeat_count', 0);
+			$timer
+				.removeClass('hidden')
+				.find('[data-timer]')
+				.html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+
+			smsCountDown(function() {
+				isSent = false;
+				$timer.addClass('hidden');
+				$btn.removeClass('hidden');
+				$field.prop('hidden', false);
+			}, $timer.find('[data-timer]'));
+		}
+
+		window.recaptcha_delivery_suc = recaptcha_delivery_suc;
+		window.recaptcha_pickup_suc = recaptcha_pickup_suc;
+
         $body.on('keyup.inputPhone', '.js-phone-field', function(e) {
             var $field = $(this),
                 $wg = $field.closest('.js-phone'),
@@ -29775,8 +29841,11 @@ var shopModules = (function(window, undefined) {
                 $timer = $wg.find('.js-phone-sms-timer'),
                 $pre_send_btn = $wg.find('.b-checkout_contacts_sms_send_btn'),
                 $btn = $wg.find('.js-phone-sms-send'),
-                isComplete = $field.data('phoneComplete');
+                isComplete = $field.data('phonecomplete');
 
+            console.log($field);
+            console.log(isComplete);
+            console.log($pre_send_btn);
             if (!$sms.data('required')) {
                 forms.toggleValidation.call($sms.closest('.b-checkout_contacts_sms'), true, true);
             }
@@ -29784,12 +29853,12 @@ var shopModules = (function(window, undefined) {
             if (isComplete && $wg.data('url') && !isSent) {
                 // show presend btn
                 $pre_send_btn.show();
-                
+
                 //isSent = true;
                 //sendSMS($wg, $field, $timer, $btn);
             }
         });
-        
+
         $body.on('keyup.inputPhone', '.js-phone-sms', function(e) {
             var $field = $(this),
                 $wg = $field.closest('.js-phone'),
@@ -29810,7 +29879,7 @@ var shopModules = (function(window, undefined) {
                 $sms_send_repeat = $wg.find('.js-phone-sms-send'),
                 $phone_sms_field = $wg.find('.js-phone-sms'),
                 $sms_wrap = $wg.find('.js-phone-sms-wrap'),
-                isComplete = $field.data('phoneComplete'),
+                isComplete = $field.data('phonecomplete'),
                 isSmsValid = $phone_sms_field.data('smscodevalid');
 
 						console.log($phone_sms_field);
@@ -29822,13 +29891,13 @@ var shopModules = (function(window, undefined) {
                 sendSMS($wg, $field, $timer, $sms_send_repeat);
             }
         });
-        
+
         $body.on('click.repeatSMS', '.js-phone-sms-send', function(e) {
             var $btn = $(this),
                 $wg = $btn.closest('.js-phone'),
                 $timer = $wg.find('.js-phone-sms-timer'),
                 $field = $wg.find('.js-phone-field'),
-                isComplete = $field.data('phoneComplete');
+                isComplete = $field.data('phonecomplete');
 
             if (isComplete && $wg.data('url') && !isSent) {
             		isSent = true;
@@ -29853,24 +29922,38 @@ var shopModules = (function(window, undefined) {
 
         function sendSMS($wg, $field, $timer, $btn) {
         		// custom add
-    				var $field_confirm_by_phone = $field.parents('form').find('.js-confirm-by-phone'); 
-        		$field_confirm_by_phone.prop('disabled', true).prop('checked', true);
+    				var $field_confirm_by_phone = $field.parents('form').find('.js-confirm-by-phone');
+        		//$field_confirm_by_phone.prop('disabled', true).prop('checked', true);
+        		$field_confirm_by_phone.prop('disabled', true).prop('checked', false);
         		//\ custom add
-        	
+
             $btn.addClass('hidden');
             $field.prop('readonly', true);
 
-            $timer
-                .removeClass('hidden')
-                .find('[data-timer]')
-                .html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+            // custom add проверка на кол-во повторных отправок sms
 
-            smsCountDown(function() {
-            		isSent = false;
-                $timer.addClass('hidden');
-                $btn.removeClass('hidden');
-                $field.prop('hidden', false);
-            }, $timer.find('[data-timer]'))
+			var repeat_count = (!!$btn.data('repeat_count') && $btn.data('repeat_count') > 0) ? $btn.data('repeat_count') + 1 : 1;
+			console.log('repeat_count');
+			console.log($btn.data('repeat_count'));
+			console.log(repeat_count);
+			$btn.data('repeat_count', repeat_count);
+            if(repeat_count < 3){
+				$timer
+					.removeClass('hidden')
+					.find('[data-timer]')
+					.html($wg.data('repeatTimer') ? $wg.data('repeatTimer') + 1 : 31);
+
+				smsCountDown(function() {
+						isSent = false;
+					$timer.addClass('hidden');
+					$btn.removeClass('hidden');
+					$field.prop('hidden', false);
+				}, $timer.find('[data-timer]'))
+			}else{
+            	//show recaptcha
+				$btn.closest('form').find('.g-recaptcha').removeClass('hidden');
+			}
+			//\ custom add
 
             $.ajax({
                 url: $wg.data('url'),
@@ -29879,17 +29962,19 @@ var shopModules = (function(window, undefined) {
                 data: {
                     phone: $field.val()
                 },
-                success: function(response) {}
+                success: function(response) {
+
+                }
             });
         }
-        
+
         function checkSMS($wg, $field) {
         		$field.parents('.b-form_box').removeClass('m-error');
             $field.parent().find('.b-form_box_error').remove();
-            
+
             $field.prop('readonly', true);
             $field.data('smscodevalid', false);
-            
+
             var $field_confirm_by_phone = $field.parents('form').find('.js-confirm-by-phone'),
             		$wg = $field.closest('.js-phone'),
                 $timer = $wg.find('.js-phone-sms-timer'),
@@ -29905,14 +29990,14 @@ var shopModules = (function(window, undefined) {
                 success: function(response) {
                 	var msg = 'Что-то пошло не так',
                 			is_successful = false;
-                	
+
                 	$field.data('smscodevalid', false);
-                	
+
                 	if(!!response.code && !! response.msg){
                 		msg = response.msg;
 	                	if(!(response.code == 10 || response.code == 30)){
 	                		$field.prop('readonly', false);
-	                		
+
 	                		//код НЕ верный заблокировать галочку "Хочу подтвердить заказ по телефону"
 	                		$field.data('smscodevalid', false);
 	                		console.log('no - smscodevalid');
@@ -29920,11 +30005,11 @@ var shopModules = (function(window, undefined) {
                       //forms.toggleValidation.call($('.b-checkout_address_additional'), false, false);
 	                	}else{
 	                		$field.prop('readonly', true);
-	                		
+
 	                		//код верный разблокировать галочку "Хочу подтвердить заказ по телефону"
 	                		$field.data('smscodevalid', true);
 	                		console.log('smscodevalid');
-	                		
+
 	                		if($field.parents('form').find('#delivery-customer').length > 0){
 	                			$field.parents('form').find('#delivery-customer').trigger('change');
 	                		}
@@ -29933,20 +30018,20 @@ var shopModules = (function(window, undefined) {
 	                		}
                       //$field_confirm_by_phone.prop('disabled', false).prop('checked', true);
                       //forms.toggleValidation.call($('.b-checkout_address_additional'), true, false);
-                      
+
                       // скрыть кнопку повторной отправки смс
                       $btn.addClass('hidden');
 
             					// сбросить счетчик
             					$timer.addClass('hidden');
             					clearTimeout(smsCountDownTimer);
-            					
+
             					// добавить класс лоя зеленой подсветки
             					is_successful = true;
 
 	                	}
                 	}
-                	
+
                 	// непонятная ошибка
                 	$field.parents('.b-form_box').addClass('m-error');
                 	if(is_successful){
@@ -29954,15 +30039,15 @@ var shopModules = (function(window, undefined) {
                 	}else{
                 		$field.parents('.b-form_box').removeClass('m-successful');
                 	}
-                	
+
                 	$field.prop('readonly', false);
                 	if($field.parents('.b-form_box').find('.b-form_box_error').length > 0){
                 		$field.parents('.b-form_box').find('.b-form_box_error').text(msg);
                 	}else{
                 		$field.after( '<div class="b-form_box_error">' + msg + '</div>' );
                 	}
-                	
-                	
+
+
                 }
             });
         }
@@ -30021,7 +30106,7 @@ var shopModules = (function(window, undefined) {
                                 current: $('.b-checkout_full_tabs .current').data('href')
                             });
                           }
-                        
+
                     });
                 }
                 else {
@@ -30048,7 +30133,7 @@ var shopModules = (function(window, undefined) {
                 $cart = $('.js-cart'),
                 $cartTotal = $('.b-cart_table_footer', $cart),
                 $list = $promoCodeRow.closest('.b-cart_feed');
-                
+
 
             $form.data('applied', false);
             helpers.delay.call($form, function() {
@@ -30056,7 +30141,7 @@ var shopModules = (function(window, undefined) {
                   url: $this.data('url'),
                   method: $this.data('method') || 'post',
                   dataType: 'json',
-                  
+
                   success: function(response) {
                       if (!!response.status) {
                       		$field.val('').prop('readonly', false);
@@ -30064,31 +30149,31 @@ var shopModules = (function(window, undefined) {
                           $promoCodeRow.addClass('hidden');
                           formNotifications.hideErrorLabel.call($form);
 
-                          
-                          
+
+
                           $('.b-checkout_full')
 	                          .trigger('tabs.change', {
 	                              current: $('.b-checkout_full_tabs .current').data('href')
 	                          });
-	                        
+
 	                        if (!!response['cart']) {
                               requestHandler(response['cart'], $promoCodeRow, $list, $cartTotal);
                           }
-	                          
+
                       }
                   }
               });
             });
-         
-            
-            
+
+
+
         });
     }
 
     function pickupDiscount() {
         $body
             .on('tabs.change emit.checkoutType', '.b-checkout_full', function(e, data) {
-                
+
                 var isPickup = data.current === '#pickup',
                     promoCodeApplied = $('.b-cart_tools_promoCode .form').data('applied');
 
@@ -30106,7 +30191,7 @@ var shopModules = (function(window, undefined) {
                     $list = $pickupDiscountRow.closest('.b-cart_feed');
 
                 var requestData = $.extend({ customAction: 'pickupDiscount' }, $this.find('[data-get-discount-params].current').data('getDiscountParams'));
-				
+
                 $.ajax({
                     url: $this.data('getDiscount') || window.location,
                     method: $form.data('method') || 'post',
@@ -30120,7 +30205,7 @@ var shopModules = (function(window, undefined) {
 
                                 $pickupDiscountRow.removeClass('hidden');
                             }
-                            // custom add hide discount 
+                            // custom add hide discount
                             else{
                             	$pickupDiscountRow.addClass('hidden');
                             }
@@ -30140,7 +30225,7 @@ var shopModules = (function(window, undefined) {
                     }
                 });
             });
-            
+
 				$('.b-checkout_full').trigger('emit.checkoutType', {
             current: $('.b-checkout_full_tabs .current').data('href')
         });
@@ -30273,15 +30358,20 @@ var YandexMaps = (function(window, undefined) {
                      * and suggests on address
                      */
                     $('body')
-                        .on('keyup', '.js-delivery-address', function() {
+                        .on('keyup', '.js-delivery-address', function(e) {
+                          if(e.key!=="Enter"){
+                          //console.log('keyup - .js-delivery-address');
                             var $this = $(this);
 
                             $this.data('isClosed', suggestAddress.state.get('panelClosed'));
                             $this.data('isSelected', false);
+                          }
                         })
                         .on('change', '.js-delivery-address', function() {
+                          //console.log('change - .js-delivery-address');
                             var $this = $(this);
-
+                          //console.log($this);
+                          //console.log($this.data('isSelected'));
                             setTimeout(function() {
                                 if (!$this.data('isSelected'))
                                     formNotifications.showErrorLabel.call($addressField, 'Выберите адрес из списка', 0);
@@ -30309,7 +30399,11 @@ var YandexMaps = (function(window, undefined) {
                     });
 
                     suggestAddress.events.add('select', function(e) {
+                      console.log('suggestAddress select');
+
                         $addressField.data('isSelected', true);
+
+                      console.log($addressField.data('isSelected'));
                         formNotifications.hideErrorLabel.call($addressField);
 
                         var address = e.originalEvent.item.value;
@@ -30322,6 +30416,8 @@ var YandexMaps = (function(window, undefined) {
                             });
 
                     });
+
+
 
                     map.controls.add(searchControl);
 
@@ -30350,18 +30446,30 @@ var YandexMaps = (function(window, undefined) {
                 function _handleSearch(res, input, isSuggest) {
                     var map = this,
                         address, fullAddress, coordinates,
-                        props = res['properties'];
-										
-										console.log('_handleSearch');
-										console.log(res);
-										console.log(" ");
-														
-                    if (props.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
+                        props = res['properties'],
+						addr_components = props.get('metaDataProperty.GeocoderMetaData.Address.Components'),
+						is_house_kind = false;
+
+					console.log('_handleSearch');
+					console.log(res);
+
+
+					for(var i in addr_components) {
+						//console.log(i, addr_components[i]);
+						//console.log(addr_components[i].kind);
+						if(addr_components[i].kind === 'house'){
+							is_house_kind = true;
+						}
+					}
+					//console.log('is_house_kind-' + is_house_kind);
+                    if (is_house_kind) {
+						//console.log('is_house_kind process');
+                    //if (props.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
                         address = props.get('name');
                         fullAddress = props.get('text');
                         coordinates = res.geometry.getCoordinates();
-                        
-                        var components = props.get('metaDataProperty.GeocoderMetaData.Address.Components');	
+
+                        var components = props.get('metaDataProperty.GeocoderMetaData.Address.Components');
                         if(!!components){
                         	var form = $(input).closest('form');
                         	var kinder = components.reduce(function(prev, curr) {
@@ -30371,13 +30479,14 @@ var YandexMaps = (function(window, undefined) {
 														form.find('.js-'+kind).val(name);
 													  return ;
 													}, {});
-													
+
                         }
 
                         input
                             .data('isComplete', true)
 
                         if (!isSuggest) {
+							//console.log('_handleSearch !isSuggest');
                             input
                                 .val(address)
                                 .trigger('change').trigger('refresh.validate')
@@ -30386,6 +30495,7 @@ var YandexMaps = (function(window, undefined) {
                             formNotifications.hideErrorLabel.call(input);
                         }
                         else {
+							//console.log('_handleSearch isSuggest emit.action');
                             input.trigger('emit.action');
                         }
 
@@ -30393,6 +30503,11 @@ var YandexMaps = (function(window, undefined) {
                         $('.js-delivery-address-text', map.element.closest('form')).text(address);
 
                         _userPlaceMark.call(map, coordinates);
+
+                        // custom add
+                        $('.b-checkout_address_main_map.js-pocket-box').css('max-height','');
+						            //\ custom add
+
                         _apiDeliveryInfo(coordinates);
                     }
                     else {
@@ -30456,33 +30571,44 @@ var YandexMaps = (function(window, undefined) {
 
 
                                 $address = $('.js-delivery-address');
-														
+
 														console.log('_getAddress');
 														console.log('manual-' + manual);
 														console.log(object);
 														console.log(" ");
-														
+
                             if (manual) {
                                 $address.data('isSelected', true);
 
-                                if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
+								var addr_components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components'),
+									is_house_kind = false;
+
+
+								for(var i in addr_components) {
+									if(addr_components[i].kind === 'house'){
+										is_house_kind = true;
+									}
+								}
+								if (is_house_kind) {
+
+                                //if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
                                     $address.data('isComplete', true);
                                     formNotifications.hideErrorLabel.call($address);
 
                                     $('.js-delivery-address-full', $address.closest('form')).val(fullAddress);
                                     $('.js-delivery-address-text', $address.closest('form')).text(address);
-                                    
-                                    var components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components');	
+
+                                    var components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components');
 						                        if(!!components){
-						                        	
+
 						                        	var kinder = components.reduce(function(prev, curr) {
 						                        		var kind = curr.kind,
 						                                name = curr.name;;
-						
+
 																				$('.js-'+kind).val(name);
 																			  return ;
 																			}, {});
-																			
+
 						                        }
                                 }
                                 else {
@@ -30545,7 +30671,18 @@ var YandexMaps = (function(window, undefined) {
                           // console.log(object.properties.get('metaDataProperty.GeocoderMetaData.kind'));
 
                           if (object) {
-                              if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
+
+							  var addr_components = object.properties.get('metaDataProperty.GeocoderMetaData.Address.Components'),
+								  is_house_kind = false;
+
+
+							  for(var i in addr_components) {
+								  if(addr_components[i].kind === 'house'){
+									  is_house_kind = true;
+								  }
+							  }
+							  if (is_house_kind) {
+                              //if (object.properties.get('metaDataProperty.GeocoderMetaData.kind') === 'house') {
                                   // проверка доступности доставки по адресу с домом
                                   var lat,
                                       lon;
@@ -30733,25 +30870,27 @@ var YandexMaps = (function(window, undefined) {
                                                       $('.js-delivery-price_no_cart-text').text(delivery_price_no_cart);
                                                       $('.js-calculate-info').show();
                                                   }
-                                                  
-                                                  
-                                                  
+
+
+
                                                   // сразу попробовать выбрать дату доставки
                                                   var curr_form = $('.js-tabs-page.opened form');
                                                   if(curr_form.length > 0){
                                                   	if(curr_form.find('.datepicker--cell-day.-current-').length > 0){
-                                                  		curr_form.find('.datepicker--cell-day.-current-').trigger('click');  
+
+                                                  		console.log('curr_day_click');
+                                                  		curr_form.find('.datepicker--cell-day.-current-').trigger('click');
                                                   		curr_form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
-											                            		curr_form.find('#checkout-time').trigger('change');           
+											                            		curr_form.find('#checkout-time').trigger('change');
                                                   	}
                                                   }
-                                                  //form.find('.datepicker--cell-day.-current-').trigger('click');                            
+                                                  //form.find('.datepicker--cell-day.-current-').trigger('click');
 											                            // if(form.find('#checkout-time select option[text = "Выберите другую дату"]').length > 0 ){
 											                            	// form.find('.datepicker--cell-day.-current-').next().trigger('click');
 											                            // }
-											                            
+
 											                            //form.find('#checkout-time').prop('selectedIndex', 0).selectric('refresh');
-											                            //form.find('#checkout-time').trigger('change');  
+											                            //form.find('#checkout-time').trigger('change');
 
                                               }
                                           }
@@ -30925,7 +31064,7 @@ var YandexMaps = (function(window, undefined) {
 
         // custom add
         $('#pickup_delivery_id').val(id);
-        
+
         /*var coordinates =
             object.geometry.coordinates;
 
@@ -31987,3 +32126,47 @@ var siteResponsive = (function(window, undefined) {
     };
 
 })(window);
+
+
+
+$(function() {
+	var currHash = window.location.hash;
+	var popupgood_pre = "popupgood=";
+	var good_pre = "good=";
+
+	if(currHash.indexOf(popupgood_pre) != -1){
+		var goodId = currHash.slice(currHash.indexOf(popupgood_pre) + popupgood_pre.length);
+		if(goodId.length > 0){
+			var hold = $('*[data-gid="'  + goodId + '"]').eq(0);
+			console.log(hold);
+			if(hold.length > 0){
+				$("html, body").animate({
+					scrollTop: (hold.offset().top)
+				}, 2000, function(){
+					$('.js-popup', hold).eq(0).trigger('click');
+				});
+
+			}
+		}
+	}else if(currHash.indexOf(good_pre) != -1){
+		var goodId = currHash.slice(currHash.indexOf(good_pre) + good_pre.length);
+		if(goodId.length > 0){
+			var hold = $('*[data-gid="'  + goodId + '"]').eq(0);
+			console.log(hold);
+			if(hold.length > 0){
+				$("html, body").animate({
+					scrollTop: (hold.offset().top)
+				}, 2000);
+
+			}
+		}
+	}
+});
+
+$(function() {
+	$('.js-add-to-cart_fake').click(function(){
+		$(this).parents('.b-mp-water_product_wrap').find('.js-add-to-cart').trigger('click');
+		console.log('fake');
+		return false;
+	})
+});
